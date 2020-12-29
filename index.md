@@ -1,4 +1,4 @@
-# ![](https://github.com/nebhead/pifire/blob/main/static/img/launcher-icon-1x.png) PiFire
+# ![](/img/launcher-icon-1x.png) PiFire
 ## Raspberry Pi Zero W based Smoker Grill Controller using Python 3 and Flask/Gunicorn/nginx
 *Also uses Bootstrap 4 (http://getbootstrap.com/) w/jQuery and Popper support*
 
@@ -27,21 +27,21 @@ What I did keep from dborello's project was the PID controller which was the hea
 
 The dashboard is where most of your key information and controls are at.  This is the screen that greets you when you access the PiFire WebUI on your PC, Mac or Tablet in a browser.
 
-![Dashboard](https://github.com/nebhead/pifire/blob/main/docs/webui/PiFire-Dashboard-00.png)
+![Dashboard](/img/webui/PiFire-Dashboard-00.png)
 
 For those of us who like to see the data, PiFire allows you to graph and save your cook history.  It's also a great way to monitor your cook in realtime.  
 
-![History](https://github.com/nebhead/pifire/blob/main/docs/webui/PiFire-History-00.png)
+![History](/img/webui/PiFire-History-00.png)
 
 This is what PiFire looks like on your mobile device.
 
-![Mobile Dashboard](https://github.com/nebhead/pifire/blob/main/docs/webui/PiFire-Mobile-00.jpg)
+![Mobile Dashboard](/img/webui/PiFire-Mobile-00.jpg)
 
-![Mobile History](https://github.com/nebhead/pifire/blob/main/docs/webui/PiFire-Mobile-01.jpg)
+![Mobile History](/img/webui/PiFire-Mobile-01.jpg)
 
 Example comparison that I did on a real cook of the Traeger controller attempting to hold 275F and the PiFire holding at the same temperature.  The difference is very impressive.  The Traeger swings massively up to 25F over and under the set temperature.  However the PID in from PiSmoker does a great job holding roughly +-7 degrees.  And this is without any extra tuning. 
 
-![Performance](https://github.com/nebhead/pifire/blob/main/docs/photos/SW-Performance.jpg)
+![Performance](/img/photos/SW-Performance.jpg)
 
 Here's a brief YouTube video giving a basic overview of the PiFire web interfaces.
 
@@ -51,11 +51,11 @@ Here's a brief YouTube video giving a basic overview of the PiFire web interface
 
 A shot of the splash screen on the display when booting up.  
 
-![Splash](https://github.com/nebhead/pifire/blob/main/docs/photos/HW-Splash.jpg)
+![Splash](/img/photos/HW-Splash.jpg)
 
 Typical temperature display for the grill. [Edit: The display has been enhanced to show status for the fan, auger, igniter, mode and notifications]
 
-![Display Temp](https://github.com/nebhead/pifire/blob/main/docs/photos/HW-Display-Temp.jpg)
+![Display Temp](/img/photos/HW-Display-Temp.jpg)
 
 ## Hardware Configuration
 
@@ -77,27 +77,27 @@ The parts list and setup:
 
 Let me first say that I am not a hardware engineer by trade and thus there may be mistakes in what I'm providing here.  I would encourage you to use this as a guide, but know that it isn't perfect by any means.  Do let me know if there are any improvements that you can see for this.  
 
-![Raspberry Pi Wiring](https://github.com/nebhead/pifire/blob/main/docs/PiFire-PiSide-Schematic.png)
+![Raspberry Pi Wiring](/img/PiFire-PiSide-Schematic.png)
 
 To ease the wiring, I had a simple PCB printed. If you are so inclined, I've made it available here: https://easyeda.com/nebhead77/pifire
 
 This PCB allows you to plug the ADS1115 into the header on the right side of the board with no additional wiring.  It's definitely not necessary, but it makes wiring / soldering just a little bit easier.  In the future, I may consider to redesign this as a "HAT".  
 
-![Layout](https://github.com/nebhead/pifire/blob/main/docs/PiFire-PCB-Layout.png)
+![Layout](/img/PiFire-PCB-Layout.png)
 
 Here's a 3D-View of the board.  
 
-![3D-View](https://github.com/nebhead/pifire/blob/main/docs/PiFire-PCB-3DView.png)
+![3D-View](/img/PiFire-PCB-3DView.png)
 
 And here's a picture of the real thing all built out.
 
-![Built PCB](https://github.com/nebhead/pifire/blob/main/docs/photos/HW-PCB-Assembled.jpg)
+![Built PCB](/img/photos/HW-PCB-Assembled.jpg)
 
 The following is a rough schematic of the relay side of the of the design. Basically this is what allows you to control the Fan, Auger, Igniter and Power as well as switch between the existing controller and the PiFire controller via software.
 
 Note that wire colors may vary with different models of grills. I've tried to use the standard wire colors here that you may actually see, but if you've swapped out any components or have a newer/older version they may be different.  
 
-![Relay & Power Wiring](https://github.com/nebhead/pifire/blob/main/docs/PiFire-Relay-Schematic.png)
+![Relay & Power Wiring](/img/PiFire-Relay-Schematic.png)
 
 ### Raspberry Pi GPIO / PIN Mapping
 
@@ -116,29 +116,29 @@ Sometimes it's helpful to see the entire project laid out in picture form, so I'
 
 Here's a diagram showing all of the major components in the project box and how I laid them out.  Certainly, you can do this differently but this was how I did it.  Much hot glue and electrical tape was used.  Please don't judge.
 
-![HW Photo Diagram](https://github.com/nebhead/pifire/blob/main/docs/photos/HW-Full-07.jpg)
+![HW Photo Diagram](/img/photos/HW-Full-07.jpg)
 
 I'm not sure about other brands, but Traeger designed their Texas grills with handy Molex connectors for everything that hooks up to their controller.  It makes the electronics underneath extremely serviceable and allows us to rather seamlessly connect our project in between.
 
-![HW Photo Diagram](https://github.com/nebhead/pifire/blob/main/docs/photos/HW-Molex-Igniter.jpg)
+![HW Photo Diagram](/img/photos/HW-Molex-Igniter.jpg)
 
 The following is a picture of the project from the outside.  You can see that the OLED is mounted to the front of the box which has a clear lid.  I put a piece of white plastic in the front to hide the electronics inside.  The wiring with the molex connectors is fed through the bottom of the box to underneath smoker pellet box where all of the connections can be made.  I've zip-tied the wires together, tucked them up in side the pellet box area, and made it nice and tidy.  
 
-![HW Photo Diagram](https://github.com/nebhead/pifire/blob/main/docs/photos/HW-Full-05.jpg)
+![HW Photo Diagram](/img/photos/HW-Full-05.jpg)
 
 On the bottom of the  project box, I have drilled decent sized hole and installed a rubber grommet (to protect the wires) for all of the 18AWG wiring to be routed through.  There are quite a few wires coming out, so it's good to give yourself some space, but maybe not too much given that your grill may exposed to the elements outside.  It should be snug.
 
 I also have an optional power switch down here, that is a normally closed momentary switch.  This wired between the 5V power supply and the Raspberry Pi so that I can do a hard power-cycle when necessary.  Or if the Raspberry Pi is off, a power cycle will boot it up again.  
 
-![HW Photo Diagram](https://github.com/nebhead/pifire/blob/main/docs/photos/HW-Full-03.jpg)
+![HW Photo Diagram](/img/photos/HW-Full-03.jpg)
 
 Around to the side facing the user (in my configuration), you'll see we have rather large selector switch which is used to select whether you are using the original controller (OFF) or the PiFire controller (ON).  
 
 Below this, are two 2.5mm mono jacks for plugging in your two meat probes.  These were a bit fiddley to install, but I managed to hotglue them in place on the inside - and they feel really solid.  *EDIT:* I've removed the hotglue for the 2.5mm mono jacks and replaced it with copious amounts of superglue.  With temperatures rising above 100F here in Northern California, the hot glue softened too much to be mechanically sound.  Some day I might have to come up with another solution, but for now, super-glue is doing the trick.
 
-![HW Photo Diagram](https://github.com/nebhead/pifire/blob/main/docs/photos/HW-Full-02.jpg)
+![HW Photo Diagram](/img/photos/HW-Full-02.jpg)
 
-A few more photos can be found in the [https://github.com/nebhead/pifire/blob/main/docs/photos](https://github.com/nebhead/pifire/blob/main/docs/photos) folder of this repository if you are interested in seeing more.  
+A few more photos can be found in the [/img/photos](/img/photos) folder of this repository if you are interested in seeing more.  
 
 ## Software Installation
 
@@ -330,7 +330,7 @@ Simply navigate to the IP address of your device for example (you can usually fi
 #### The Dashboard
 The interface / webui is broken out several pages. The first is the dashboard view where you can check the current status of the grill, and control the modes. Clicking the PiFire logo in the upper left will always take you back to the dashboard from whatever screen you are on.  
 
-![Dashboard](https://github.com/nebhead/pifire/blob/main/docs/webui/PiFire-Dashboard-00.png)
+![Dashboard](/img/webui/PiFire-Dashboard-00.png)
 
 Pressing the hamburger icon in the upper right of the interface, allows you to also access to the other screens.  
 
@@ -348,11 +348,11 @@ After you select startup, you will see the following icons:
 
 * **Smoke Mode** - In this mode, the smoker will cycle through a predetermined cycle from the settings.json, that is intended to generate smoke.  Just like your original controller, smoke mode isn't trying to hit a temperature target, rather it is running through a fixed cycle of turning on/off the auger to feed more pellets into the firepot.   
 
-![Dashboard](https://github.com/nebhead/pifire/blob/main/docs/webui/PiFire-Dashboard-02.png)
+![Dashboard](/img/webui/PiFire-Dashboard-02.png)
 
 * **Hold Mode** - This mode uses the PID controller (pid.py) developed by dborello for the PiSmoker project.  More details can be found on his blog about how this works.  Basically we use his algorithm to try to hold a specific temperature, by feeding the fire at intervals that are dynamically calculated at the end of each cycle.  It's really very interesting stuff and it can work very well.  I personally am looking forward to tuning this more so that I can keep the temperature closer to a +/-5F hold.   
 
-![Dashboard](https://github.com/nebhead/pifire/blob/main/docs/webui/PiFire-Dashboard-04.png)
+![Dashboard](/img/webui/PiFire-Dashboard-04.png)
 
 * **Shutdown Mode** (Finish Flag Icon) - This mode simply shuts off the auger and keeps the fan running for 60 seconds to burn down some of the remaining pellets.  It's a bit more graceful than just turning off the grill immediately.  Once the controller finishes the shutdown cycle, you'll see the original startup, monitor and stop buttons again.  
 
@@ -368,7 +368,7 @@ PiFire has some basic built in safety features which are configurable in the set
 
 Example of icon that appears in error conditions:
 
-![Dashboard](https://github.com/nebhead/pifire/blob/main/docs/webui/PiFire-Dashboard-06.png)
+![Dashboard](/img/webui/PiFire-Dashboard-06.png)
 
 #### Settings
 
@@ -377,7 +377,7 @@ The settings page has several card sections that can modify the settings/behavio
 **Probe Settings & Probe Profile Editor** - In the Probe Settings you can select the probe profiles that you want to use for the Grill, and the two food probes.  By default, I've included profiles for the probes that I have on hand at home and have been able to find coefficients for from various forums (Heatermeter / Skyperry).  In this card you can also turn on / off the visibility of the probes on the main dashboard.  
 
 The profile editor allows you to modify the existing probe profiles or add your own new probe profile.  If you get add something new or improve upon the default probe profiles, feel free to submit a pull request in the future.  
-![Settings](https://github.com/nebhead/pifire/blob/main/docs/webui/PiFire-Settings-00.png)
+![Settings](/img/webui/PiFire-Settings-00.png)
 When adding a new profile, these are the configurable settings:
 * _Unique ID_ - This can be really anything, but it should be unique and typically one word or multiple words without spaces so that it's machine readable.  This is used by PiFire to sort the list, identify a profile and load a profile internally.  
 * _Name_ - More free-form text field for the human readable name. I've chosen to put dashes between words, but it's probably not necessary.
@@ -388,10 +388,10 @@ When adding a new profile, these are the configurable settings:
 **Pro Tip:** Lot's of wonderfully good information can be gathered from [HeaterMeter's Probe documentation](https://github.com/CapnBry/HeaterMeter/wiki/HeaterMeter-Probes). This is all mostly relevant to this project as well, since the design is basically the same.  
 
 **Cycle Settings** - PMode (Startup/Smoke): PMode is a way to set the auger off time during the Startup and Smoke cycles.  The default value is 2, which will run the auger on for 15 seconds and then off for 65 seconds during a single cycle. Depending on the outside temperature, you may want to decrease this value for colder environments or increase this value for warmer environments.  This helps you dial in the temperature of the smoke cycle so that it is not too high or too low.    
-![Settings](https://github.com/nebhead/pifire/blob/main/docs/webui/PiFire-Settings-01.png)
+![Settings](/img/webui/PiFire-Settings-01.png)
 
 **Cycle Settings** - PID (Hold Mode): To hold a set temperature, PiFire utilizes a PID controller which was designed by [Dan Borello](http://engineeredmusings.com/pismoker/) for the [PiSmoker](https://github.com/DBorello/PiSmoker) project.  For more information about his PID controller, check out his [blog](http://engineeredmusings.com/pismoker/). I am humbled by his work and thus utilized his controller with almost no modification in this project.  
-![Settings](https://github.com/nebhead/pifire/blob/main/docs/webui/PiFire-Settings-02.png)
+![Settings](/img/webui/PiFire-Settings-02.png)
 
 **History Settings** - Miscellaneous settings for the history page.  You can define the number of minutes to display on the chart, so that you can effectively zoom in or out on the data.  You can also define how many datapoints to display on the chart, which can help improve performance when doing auto-refresh.  Basically, PiFire will divide the number of datapoints accross the window of time that you have selected.  Clearing history on startup, will clear the history when startup mode is selected.  This basically starts your cook with a clean slate of data.  The last option is auto-refresh default which will make the chart auto refresh every three seconds, giving you a live view of temperature.  
 
@@ -403,7 +403,7 @@ When adding a new profile, these are the configurable settings:
 	* _Reignite Retries_ - If the grill temperature drops below the startup temperature, attempt reignite.  This number can be set to up to 10 total retries before failing.   
 * Preventing Grill Overtemp - PiFire will monitor the grill temperature during Smoke, Hold and Monitor modes to ensure that the grill does not exceed the _Max Operational Temp_ setting defined here.  
 
-![Settings](https://github.com/nebhead/pifire/blob/main/docs/webui/PiFire-Settings-03.png)
+![Settings](/img/webui/PiFire-Settings-03.png)
 
 **Page Settings** - Currently allows the user to enable a dark theme for night-time viewing or if just preferred.  
 
@@ -420,7 +420,7 @@ IFTTT requires more configuration on the IFTTT website and is not in the scope o
 * Grill_Error_02
 * Grill_Warning
 
-![Settings](https://github.com/nebhead/pifire/blob/main/docs/webui/PiFire-Settings-04.png)
+![Settings](/img/webui/PiFire-Settings-04.png)
 
 #### History
 
@@ -432,7 +432,7 @@ At the bottom of this card is an input box to select the number of minutes you w
 
 At the bottom of the page is a auto-refresh button to enable/disable 'live' data.  Note that when auto-refresh is enabled, any changes you made to hide/show data in the graph will reset when the data refreshes every three (3) seconds.  Show / Hide states cannot currently be used when in this mode.  Turn off auto-refresh to use the show / hide features of the graph.  
 
-![History](https://github.com/nebhead/pifire/blob/main/docs/webui/PiFire-History-00.png)
+![History](/img/webui/PiFire-History-00.png)
 
 #### Events
 
@@ -440,7 +440,7 @@ This page provides limited history of the events since the system was turned on.
 
 If debug mode is enabled, it will be displayed underneath the events history card.  Debug information will generally be more verbose than the event history.  Just like the event history, it will be cleared on a reboot or may be erased in the admin settings screen.  It's advisable to only turn on debug mode (in Admin Settings) if you are experiencing problems as this can affect performance of the system.  
 
-![Events](https://github.com/nebhead/pifire/blob/main/docs/webui/PiFire-Events-00.png)
+![Events](/img/webui/PiFire-Events-00.png)
 
 #### Recipes
 
@@ -450,11 +450,11 @@ To be implemented.
 
 In the admin settings page, you can set global settings that will configure the system.  These include turning on debug mode, enabling manual mode, and resetting data for the different components (or ALL with Reset Factory Settings)
 
-![Admin](https://github.com/nebhead/pifire/blob/main/docs/webui/PiFire-Admin-00.png)
+![Admin](/img/webui/PiFire-Admin-00.png)
 
 Scrolling down further gives you the option to reboot the system or shutdown the system.  
 
-![Admin](https://github.com/nebhead/pifire/blob/main/docs/webui/PiFire-Admin-01.png)
+![Admin](/img/webui/PiFire-Admin-01.png)
 
 Below these controls, you'll see more information about the system hardware, system temperature, uptime, GPIO Pins, etc.  
 
@@ -464,15 +464,15 @@ If you are an Android person, you are likely to be using Chrome on your phone an
 
 First, navigate to the instance of the application in your Chrome browser on your phone.  Remember, it's as easy as going to the IP address that was assigned to you device.  Then, from the Chrome drop-down menu in the upper right of the screen, select "Add to Home screen".  
 
-![Add to Home screen in Chrome](https://github.com/nebhead/pifire/blob/main/docs/webui/PiFire-Chrome-00.jpg)
+![Add to Home screen in Chrome](/img/webui/PiFire-Chrome-00.jpg)
 
 Then, when the new dialog box pops up, you will have the opportunity to rename the application, or keep the default.
 
-![Rename the application](https://github.com/nebhead/pifire/blob/main/docs/webui/PiFire-Chrome-01.jpg)
+![Rename the application](/img/webui/PiFire-Chrome-01.jpg)
 
 And there you have it, you've not only created a quick link to your web-app, but you've also created a pseudo application at the same time.
 
-![App on Homescreen](https://github.com/nebhead/pifire/blob/main/docs/webui/PiFire-Chrome-02.jpg)
+![App on Homescreen](/img/webui/PiFire-Chrome-02.jpg)
 
 #### Additional Notes on Accessing the Application from Outside your Local Network
 
@@ -514,7 +514,6 @@ Ideas for WebUI / App
 		New: Smoke+ Mode (Toggle Fan On/Off) - Experimental feature to increase smoke output by modulating the fan on/off time. This will require some experimentation.
 
 	History
-		New: Incorporate "streaming" instead of re-writing the chart every 3 seconds
 		New: Annotation when mode changes?
 
 	Recipes Page
