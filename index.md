@@ -430,7 +430,7 @@ The chart itself can be interacted with by hovering (or clicking on) the data po
 
 At the bottom of this card is an input box to select the number of minutes you want to see, up to the current time (or time that the data collecting stopped).  This allows you to "zoom-in" to just the last minute or "zoom-out" to view a longer window of time.  
 
-At the bottom of the page is a auto-refresh button to enable/disable 'live' data.  Note that when auto-refresh is enabled, any changes you made to hide/show data in the graph will reset when the data refreshes every three (3) seconds.  Show / Hide states cannot currently be used when in this mode.  Turn off auto-refresh to use the show / hide features of the graph.  
+At the bottom of the page is a auto-refresh button to enable/disable 'live' data.  The page will refresh interval based on the time window that you have selected and the number of datapoints (selected in the settings menu).  
 
 ![History](/img/webui/PiFire-History-00.png)
 
@@ -500,52 +500,6 @@ When prototyping, functionality, it's helpful to run control.py in one process a
 
 More to come in this section.  
 
-### Future Ideas To Be (possibly) Implemented  
-
-In this section, I'm going to keep a running list of ideas for possible upgrades for PiFire in the future.  No guarantees that these will be implemented, but it gives you some idea of what I have planned for the future.  
-
-```
-Known Issues
-	* Issue where sometimes temperature readings from the ADC fail.  Not sure if this is an i2c bus problem or something else.  Does not effect overall functionality, but can be annoying when looking at the history data.  
-	* Issue where if the history page is left open too long the auto-refresh may eventually cause the tab to crash with out of memory errors.  
-
-Ideas for WebUI / App
-	Dashboard
-		New: Smoke+ Mode (Toggle Fan On/Off) - Experimental feature to increase smoke output by modulating the fan on/off time. This will require some experimentation.
-
-	History
-		New: Annotation when mode changes?
-
-	Recipes Page
-		New: Custom Programs (or Recipes)
-			Event Triggers (Pit Temp, Probe Temp, Timer) w/Notifications
-
-	Debug interface for prototype testing
-		New: Prototype Increase Temp, Decrease Temperature (Turn on/off outputs, inputs)
-
-	Settings
-		New: Name your Smoker (give your install a unique name)
-
-	Admin
-		New: Check for Updates / Pull latest updates from GitHub
-
-	API
-		New: API interface to control functions and return JSON data structures for status/history (could be used to develop an Android or iPhone native app) (partially implemented - read status only)
-
-Ideas for Control process
-	New: Smart Probe Enable (i.e. enable when plugged in, disable when unplugged)
-	New: Physical Buttons / Control Dial for grill control while you are standing in front of it.  
-
-Ideas for display
-	New: Display Probe Temperature
-	New: Display Not Connected to Internet Symbol if not connected
-	New: Display IP Address (or QR Code?) https://pypi.org/project/qrcode/
-	New: Larger display with more display capabilities
-```
-
-### Updates
-
-* 9/2020 Initial Release
 
 ### Credits
 
