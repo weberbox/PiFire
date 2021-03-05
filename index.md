@@ -27,11 +27,11 @@ What I did keep from dborello's project was the PID controller which was the hea
 
 The dashboard is where most of your key information and controls are at.  This is the screen that greets you when you access the PiFire WebUI on your PC, Mac or Tablet in a browser.
 
-![Dashboard](/img/webui/PiFire-Dashboard-00.png)
+![Dashboard](/img/webui/PiFire-Dashboard-00.jpg)
 
 For those of us who like to see the data, PiFire allows you to graph and save your cook history.  It's also a great way to monitor your cook in realtime.  
 
-![History](/img/webui/PiFire-History-00.png)
+![History](/img/webui/PiFire-History-00.jpg)
 
 This is what PiFire looks like on your mobile device.
 
@@ -63,33 +63,57 @@ Typical temperature display for the grill. [Edit: The display has been enhanced 
 The parts list and setup:
 
 * **Raspberry Pi Zero W** - Technically any Raspberry Pi with WiFi will do fine, but for this application a Raspberry Pi Zero W works really well and is the right price.
-* **4-Channel Relay** - Needed for controlling all of the 120V outputs (Fan, Auger, Igniter, Power) [Amazon Link](https://www.amazon.com/JBtek-Channel-Module-Arduino-Raspberry/dp/B00KTEN3TM)
-* **Resistors** - (3x) 10k ohm resistors for grill RTD and meat probes resistor divider.  You may want to consider getting some decent quality tolerance resistors for this given that accuracy is important.  I managed to source some pretty accurate dividers. (1x) 330 Ohm resistor for power selector switch.    
+* **4-Channel Relay** - Needed for controlling all of the 120V outputs (Fan, Auger, Igniter, Power).  The mechanical relay option may better suited for implementations where the existing controller is preserved, due to the NO, NC terminals are both available.  If implementing a standalone, using a Solid State Relay is a great option. [Amazon Link - Mechanical Relay](https://www.amazon.com/JBtek-Channel-Module-Arduino-Raspberry/dp/B00KTEN3TM), [Amazon Link - Solid State Relay](https://www.amazon.com/NOYITO-High-level-Automation-Industrial-Modification/dp/B07BLL4HFD)
+* **Resistors** - (3x) 10k ohm resistors for grill RTD and meat probes resistor divider.  You may want to consider getting some decent quality tolerance resistors for this given that accuracy is important.  I managed to source some pretty accurate dividers. (1x) 330 Ohm resistor for power selector switch.  (3x) 10k Ohm resistors for optional physical button input, as well as (3x) 1k Ohm resistors.    
 * **Micro SD Card** - Greater than 4GB is probably good.  
 * **120V AC to 5VDC Power Supply** - In this particular case it's a 5V5A output which can be connected to the relay as well! [Amazon Link](https://www.amazon.com/gp/product/B07B111B7Y)
-* **SSD1306** - Standard 1" OLED display.  It's pretty tiny, but it does the job and it can be found very cheap if you are willing to order direct from China. [Amazon Link](https://www.amazon.com/UCTRONICS-SSD1306-Self-Luminous-Display-Raspberry/dp/B072Q2X2LL)
 * **ADS1115** - Popular I2C based 16bit Analog to Digital Converter.  [Amazon Link](https://www.amazon.com/conversor-anal%C3%B3gico-desarrollo-amplificador-unidades/dp/B082QX1RDV)
 * **Molex Connectors** - This is a super critical to making this a seamless integration of the controller.  This basically allows you to easily plug into the existing connections on the smoker.  I would highly recommend purchasing a wire crimping tool, and watch some youtube videos to understand how these connectors work.  Careful not to trim too much off of the leads so that they do not slide through the connector.  [Amazon Link](https://www.amazon.com/gp/product/B074G5PQHL)
-* **2.5mm Mono Audio Jack** - Your mileage may vary with these and thus I am not putting any links to recommendations here.  These are used for the meat probes, but I've found the quality of these jacks can be generally very poor.  In some cases, the plugs will not stay put in the jacks, so you may have to do some tweaking of the mechanical bits to get them to stay.  If anyone has a good reliable source for these, I'd happily provide a link here.  
+* **2.5mm Mono Audio Jack** - I have finally found some very high quality 2.5mm jacks which can be found on ebay, Amazon and other Chinese electronics sites.  These Philmore style jacks in either stereo or mono are excellent and very reliable.  The catch is that they can be quite expensive.  Up to $8/piece.  However, I feel this is worth the price compared to the cheap surface mount options out there.  [Amazon Link](https://www.amazon.com/gp/product/B01M2AZTUQ)  
 * **RTD1000 Traeger Temp Probe** - I decided to use a completely separate temperature probe for the actual pit temperature because I was too lazy to implement a solution to use the existing temperature probe.  I'll provide a link to Amazon here, but you can also order much cheaper versions of the same thing on Ebay.   [Amazon Link](https://www.amazon.com/QuliMetal-Temperature-Replacement-Traeger-Thermostat/dp/B07JYYBVQ7)
+* **Tack Switches** - (3x) Optional for physical button input.  Popular swtiches for projects which can be obtained almost anywhere very cheaply. [Amazon Link](https://www.amazon.com/gp/product/B071KX71SV)
+
+#### Display Options
+* **SSD1306** - Standard 1" OLED display with I2C interface (64Hx128W).  It's pretty tiny, but it does the job and it can be found very cheap if you are willing to order direct from China.  This is what was used for the initial/default implementation on the PiFire project.  [Amazon Link](https://www.amazon.com/UCTRONICS-SSD1306-Self-Luminous-Display-Raspberry/dp/B072Q2X2LL)
+
+* **ILI9341 Based Display** - Many versions of this display are available from different sources.  I've built the ILI9341 support around the 240Hx320W SPI version of this. [Amazon Link](https://www.amazon.com/Display-Module-240320-4-Wire-Screen/dp/B07KPD4DHD)
+
+* **ST7789 Based Display** - Again, many revisions of this are available from many different sources.  The specific screen that I have built support on is from Waveshare, with a 240x240 screen and SPI interface. [Amazon Link](https://www.amazon.com/gp/product/B07MH93747)
+
+#### Optional Hopper Sensors
+* **VL53L0X** - Time of flight sensor with I2C interface.  This sensor allows the ability to measure the hopper pellet level quite easily and reliably. While it can be a bit expensive on Amazon, this can be obtained from other vendors (directly from China) for relatively cheap. [Amazon Link](https://www.amazon.com/gp/product/B071DW8M8V)
+
+* **HCSR04** - Ultrasonic Sensor with GPIO interface.  This sensor hasn't been tested, but the module support is provided for potential use/testing if desired. These sensors are cheap and ubiquitous.  [Amazon Link](https://www.amazon.com/HC-SR04-Ranging-Detector-Ultrasonic-Distance/dp/B01GNEHJNC)
 
 ### Hardware Schematics
 
 Let me first say that I am not a hardware engineer by trade and thus there may be mistakes in what I'm providing here.  I would encourage you to use this as a guide, but know that it isn't perfect by any means.  Do let me know if there are any improvements that you can see for this.  
 
-![Raspberry Pi Wiring](/img/PiFire-PiSide-Schematic.png)
+**_UPDATE:_** There are now two design choices, with expanded support for displays as well.  The original schematic is still applicable for anyone interested in leaving the existing controller in place alongside the PiFire controller.  The newly added schematic is for a stand-alone configuration and also adds SPI screen support.  
 
-To ease the wiring, I had a simple PCB printed. If you are so inclined, I've made it available here: https://easyeda.com/nebhead77/pifire
+Example of basic PiFire wiring (PiSide) with SSD1306 OLED I2C based display.  
+![Raspberry Pi Wiring w/I2C Display](/img/PiFire-PiSide-Schematic.png)
 
-This PCB allows you to plug the ADS1115 into the header on the right side of the board with no additional wiring.  It's definitely not necessary, but it makes wiring / soldering just a little bit easier.  In the future, I may consider to redesign this as a "HAT".  
+Example of advanced PiFire wiring (PiSide) with ILI9341 TFT SPI based display and VL53L0X hopper sensor.  
+![Raspberry Pi Wiring w/SPI Display & Hopper Sensore](/img/PiFire-PiSide-SchematicB.jpg)
 
-![Layout](/img/PiFire-PCB-Layout.png)
+**_UPDATE:_** There is a NEW PCB design which greatly reduces the wiring effort required for wiring up most of the devices.  This new design is somewhat of a hat, in that can be plugged directly into the Pi Zero W header, and then breaks out the needed interfaces including I2C, SPI, ADS1115 and probe screw terminals.  using the PCB isn't required, however it will make building this project much easier.  
+
+The schematic, PCB and gerber files are available here: https://easyeda.com/nebhead77/pifire-v2
+
+You can order your own directly from one of the many PCB manufacturers (very cheaply), or if you live in the US, I have a handful of spare bare-boards (NOT Assembled) that I can ship for a small fee.  
+
+![Schematic](/img/PiFire-PCB-v2-Schematic.jpg)
+
+This PCB allows you to plug the ADS1115 into the header on the right side of the board with no additional wiring.  
+
+![Layout](/img/PiFire-PCB-v2.png)
 
 Here's a 3D-View of the board.  
 
-![3D-View](/img/PiFire-PCB-3DView.png)
+![3D-View](/img/PiFire-PCB-v2-3D.png)
 
-And here's a picture of the real thing all built out.
+And here's a montage of the real thing all built out.
 
 ![Built PCB](/img/photos/HW-PCB-Assembled.jpg)
 
@@ -97,7 +121,16 @@ The following is a rough schematic of the relay side of the of the design. Basic
 
 Note that wire colors may vary with different models of grills. I've tried to use the standard wire colors here that you may actually see, but if you've swapped out any components or have a newer/older version they may be different.  
 
-![Relay & Power Wiring](/img/PiFire-Relay-Schematic.png)
+_Figure A: PiFire w/Existing Controller_
+![Relay & Power Wiring w/Existing Controller](/img/PiFire-Relay-Schematic.png)
+
+_Figure B: PiFire Standalone_
+![Relay & Power Wiring Standalone](/img/PiFire-StandAlone-Relay-Schematic.jpg)
+
+For Physical Button Input, the following is an example of how tactile switches can be wired, with pullups.  
+
+![Button Input Schematic](/img/PiFire-PiSide-ButtonInput.jpg)
+
 
 ### Raspberry Pi GPIO / PIN Mapping
 
@@ -109,10 +142,20 @@ __Relay Control (defined in common.py):__
 
 __Switch Input (defined in common.py):__
 * **GPIO 17** - Switch Input for system on/off
+* **GPIO 16** - Up Input Button
+* **GPIO 20** - Down Input Button
+* **GPIO 21** - Enter Input Button
+
 
 ### The Hardware in Pictures
 
-Sometimes it's helpful to see the entire project laid out in picture form, so I've tried to put together some helpful pictures.  
+Sometimes it's helpful to see the entire project laid out in picture form, so I've tried to put together some helpful pictures.  As this project is evolving, so too has the hardware build out.  I will keep the older hardware build here for posterity, but the newer version has updated much of the build to include many 3D printed parts.  
+
+#### Current Implementation 
+
+Options for 3D printing a faceplate and control box for the PiFire project will be linked here when available.  
+
+#### Older Implementation 
 
 Here's a diagram showing all of the major components in the project box and how I laid them out.  Certainly, you can do this differently but this was how I did it.  Much hot glue and electrical tape was used.  Please don't judge.
 
@@ -241,9 +284,11 @@ wget https://raw.githubusercontent.com/nebhead/pifire/main/auto-install/install.
 
 Follow the onscreen prompts to complete the installation.  At the end of the script it will reboot, so just be aware of this.  
 
-### Manual Software Installation (Recommended)
+### Manual Software Installation
 
 *NOTE: This installation assumes that you install on the 'pi' user account, otherwise the supervisor portion of the install will likely fail.  If you are using a different user account, make sure you modify the correct folder structures in the supervisor configuration files.*
+
+If something bad happened with the automatic install, you can reference these manual steps to get you going again.  
 
 Let's start by setting up the /tmp folder in RAM.  On your Pi, open the fstab file for editing:
 
@@ -330,7 +375,7 @@ Simply navigate to the IP address of your device for example (you can usually fi
 #### The Dashboard
 The interface / webui is broken out several pages. The first is the dashboard view where you can check the current status of the grill, and control the modes. Clicking the PiFire logo in the upper left will always take you back to the dashboard from whatever screen you are on.  
 
-![Dashboard](/img/webui/PiFire-Dashboard-00.png)
+![Dashboard](/img/webui/PiFire-Dashboard-00.jpg)
 
 Pressing the hamburger icon in the upper right of the interface, allows you to also access to the other screens.  
 
@@ -348,13 +393,17 @@ After you select startup, you will see the following icons:
 
 * **Smoke Mode** - In this mode, the smoker will cycle through a predetermined cycle from the settings.json, that is intended to generate smoke.  Just like your original controller, smoke mode isn't trying to hit a temperature target, rather it is running through a fixed cycle of turning on/off the auger to feed more pellets into the firepot.   
 
-![Dashboard](/img/webui/PiFire-Dashboard-02.png)
-
-* **Hold Mode** - This mode uses the PID controller (pid.py) developed by dborello for the PiSmoker project.  More details can be found on his blog about how this works.  Basically we use his algorithm to try to hold a specific temperature, by feeding the fire at intervals that are dynamically calculated at the end of each cycle.  It's really very interesting stuff and it can work very well.  I personally am looking forward to tuning this more so that I can keep the temperature closer to a +/-5F hold.   
-
-![Dashboard](/img/webui/PiFire-Dashboard-04.png)
+* **Hold Mode** - This mode uses the PID controller (pid.py) developed by dborello for the PiSmoker project.  More details can be found on his blog about how this works.  Basically we use his algorithm to try to hold a specific temperature, by feeding the fire at intervals that are dynamically calculated at the end of each cycle.  It's really very interesting stuff and it can work very well.  I personally am looking forward to tuning this more so that I can keep the temperature closer to a +/-5F hold.
 
 * **Shutdown Mode** (Finish Flag Icon) - This mode simply shuts off the auger and keeps the fan running for 60 seconds to burn down some of the remaining pellets.  It's a bit more graceful than just turning off the grill immediately.  Once the controller finishes the shutdown cycle, you'll see the original startup, monitor and stop buttons again.  
+
+* **Smoke Plus Mode** - Green button with fan icon indicates that Smoke Plus is enabled and will cycle the fan between the temperature window specified in settings.  This can be disabled by clicking on this button or enabled by clicking the same button.  
+
+_After Startup Mode Completes_
+![Dashboard](/img/webui/PiFire-Dashboard-02.jpg)
+
+_Hold Button Activated, with Set Point_
+![Dashboard](/img/webui/PiFire-Dashboard-04.png)
 
 **Timer** - Relatively self explanatory, but you can set a timer which will send a notification (if enabled) when it expires.  This timer will be visible at the top of the dashboard while running and can be paused, stopped, started from there.  The timer will also be visible on the history screen for convenience.  
 
@@ -368,7 +417,7 @@ PiFire has some basic built in safety features which are configurable in the set
 
 Example of icon that appears in error conditions:
 
-![Dashboard](/img/webui/PiFire-Dashboard-06.png)
+![Dashboard](/img/webui/PiFire-Dashboard-06.jpg)
 
 #### Settings
 
@@ -387,11 +436,15 @@ When adding a new profile, these are the configurable settings:
 
 **Pro Tip:** Lot's of wonderfully good information can be gathered from [HeaterMeter's Probe documentation](https://github.com/CapnBry/HeaterMeter/wiki/HeaterMeter-Probes). This is all mostly relevant to this project as well, since the design is basically the same.  
 
-**Cycle Settings** - PMode (Startup/Smoke): PMode is a way to set the auger off time during the Startup and Smoke cycles.  The default value is 2, which will run the auger on for 15 seconds and then off for 65 seconds during a single cycle. Depending on the outside temperature, you may want to decrease this value for colder environments or increase this value for warmer environments.  This helps you dial in the temperature of the smoke cycle so that it is not too high or too low.    
-![Settings](/img/webui/PiFire-Settings-01.png)
+**Grill Name** - Optionally you can choose to add a name for your grill which will be displayed on most screens in the navbar.  This is just for fun and if you have multiple grills with multiple PiFire builds (lucky you!) then you should be able to use this to tell them all apart.  For me, I use this to differentiate between my _real_ grill vs. my test systems. 
 
-**Cycle Settings** - PID (Hold Mode): To hold a set temperature, PiFire utilizes a PID controller which was designed by [Dan Borello](http://engineeredmusings.com/pismoker/) for the [PiSmoker](https://github.com/DBorello/PiSmoker) project.  For more information about his PID controller, check out his [blog](http://engineeredmusings.com/pismoker/). I am humbled by his work and thus utilized his controller with almost no modification in this project.  
-![Settings](/img/webui/PiFire-Settings-02.png)
+**Work Mode Settings** - (Startup/Smoke Cycle Settings): Startup and Smoke modes are similar in that they use a fixed auger on/off cycle time (this is not dynamically changed as in the hold mode).  The Auger On Time setting is the amount of time the auger should run at the beginning of the cycle.  The default is 15 seconds.  PMode is a way to set the auger off time during the Startup and Smoke cycles.  The default value is 2, which will run the auger on for 15 seconds and then off for 65 seconds during a single cycle. Depending on the outside temperature, you may want to decrease this value for colder environments or increase this value for warmer environments.  This helps you dial in the temperature of the smoke cycle so that it is not too high or too low.    
+![Settings](/img/webui/PiFire-Settings-01.jpg)
+
+**Smoke Plus Settings** - (NEW) Smoke Plus is a feature that theoretically can improve the smoke output of the smoker during Smoke and Hold modes.  The way this works is to cycle the fan on/off which allows the pellets to smolder with the fan off and then produce more smoke when the fan is turned back on.  The default setting is enabled by default, cycle time of 10 seconds (5 seconds on / 5 seconds off), between the temperatures of 160F and 220F.  
+
+**Hold Settings** - PID (Hold Mode): To hold a set temperature, PiFire utilizes a PID controller which was designed by [Dan Borello](http://engineeredmusings.com/pismoker/) for the [PiSmoker](https://github.com/DBorello/PiSmoker) project.  For more information about his PID controller, check out his [blog](http://engineeredmusings.com/pismoker/). I am humbled by his work and thus utilized his controller with almost no modification in this project.  
+![Settings](/img/webui/PiFire-Settings-02.jpg)
 
 **History Settings** - Miscellaneous settings for the history page.  You can define the number of minutes to display on the chart, so that you can effectively zoom in or out on the data.  You can also define how many datapoints to display on the chart, which can help improve performance when doing auto-refresh.  Basically, PiFire will divide the number of datapoints accross the window of time that you have selected.  Clearing history on startup, will clear the history when startup mode is selected.  This basically starts your cook with a clean slate of data.  The last option is auto-refresh default which will make the chart auto refresh every three seconds, giving you a live view of temperature.  
 
@@ -403,7 +456,7 @@ When adding a new profile, these are the configurable settings:
 	* _Reignite Retries_ - If the grill temperature drops below the startup temperature, attempt reignite.  This number can be set to up to 10 total retries before failing.   
 * Preventing Grill Overtemp - PiFire will monitor the grill temperature during Smoke, Hold and Monitor modes to ensure that the grill does not exceed the _Max Operational Temp_ setting defined here.  
 
-![Settings](/img/webui/PiFire-Settings-03.png)
+![Settings](/img/webui/PiFire-Settings-03.jpg)
 
 **Page Settings** - Currently allows the user to enable a dark theme for night-time viewing or if just preferred.  
 
@@ -420,41 +473,58 @@ IFTTT requires more configuration on the IFTTT website and is not in the scope o
 * Grill_Error_02
 * Grill_Warning
 
-![Settings](/img/webui/PiFire-Settings-04.png)
+![Settings](/img/webui/PiFire-Settings-04.jpg)
 
 #### History
 
-The history page provides a simple line-graph plot of the current history.  In the upper right hand corner of the history chart card is a trash can icon which will allow you to delete the current history.  You might want to do this if the history file has gotten too big or if you want to start a new cook.  By default, on startup, the history will be erased.  Also in the upper right corner of the chart card is a icon for exporting the data to CSV file.  This is useful for those who might want to look at the data in Excel, or other spreadsheet software.  
+The history page provides a simple line-graph plot of the current history.  
+
+You will find most controls in the upper right hand corner of the history chart.  First is an auto-refresh button to enable/disable 'live' data.  The page will refresh approximately every 2 seconds.  Also, there is a trash can icon which will allow you to delete the current history.  You might want to do this if the history file has gotten too big or if you want to start a new cook.  By default, on startup, the history will be erased.  Also in the upper right corner of the chart card is a icon for exporting the data to CSV file.  This is useful for those who might want to look at the data in Excel, or other spreadsheet software.  
 
 The chart itself can be interacted with by hovering (or clicking on) the data points.  Some of the lines/data in the legend will likely have a stikethrough, meaning it is not currently displayed.  You can click those legend items to make them visible on the chart.  Conversely, if you want to make a data-set invisible, simply click the legend item.   
 
 At the bottom of this card is an input box to select the number of minutes you want to see, up to the current time (or time that the data collecting stopped).  This allows you to "zoom-in" to just the last minute or "zoom-out" to view a longer window of time.  
 
-At the bottom of the page is a auto-refresh button to enable/disable 'live' data.  The page will refresh interval based on the time window that you have selected and the number of datapoints (selected in the settings menu).  
+![History](/img/webui/PiFire-History-00.jpg)
 
-![History](/img/webui/PiFire-History-00.png)
+#### Pellet Manager (NEW)
+
+PiFire also allows you to track what kind of pellets you have loaded, when, and if supported hardware is present what the current hopper level is.  Note that if the hardware to check pellet levels is not installed, the pellet level will always be 100%.  
+
+**Current Load Out** - This card provides basic information about the current pellets that are loaded in the hopper.  (Brand, Wood Type, Rating, Date/Time Loaded and Comments about the particular profile).  There is also a button to load new pellets (this allows you to select from the current list of pellet profiles). 
+
+**Current Pellet Level** - Provides a basic pellet level readout from the hopper if the hardware for measuring distance / hopper levels has been installed.  This will be updated every one minute on this page.  
+
+**Brands** - Here you can add/delete different pellet brands to choose from for yoru profiles.
+
+**Wood Types** - Here you can add/delete different wood pellet types to choose from for your profiles. 
+
+![Pellet Manager 00](/img/webui/PiFire-Pellet-00.jpg)
+
+**Pellet Profiles Editor** - Here you can either ADD a profile of pellets (using brands and wood types from above), or edit/delete existing profiles.  
+
+**Pellet Log** - Basic pellet loadout log, to indicate when a particular pellet profile was loaded in the past.  Allows the user to keep track of all the pellets that they have used and when.  
+
+![Pellet Manager 01](/img/webui/PiFire-Pellet-01.jpg)
+
 
 #### Events
 
 This page provides limited history of the events since the system was turned on.  This event history will be cleared on a reboot or, may be erased in the Admin Settings screen.
 
-If debug mode is enabled, it will be displayed underneath the events history card.  Debug information will generally be more verbose than the event history.  Just like the event history, it will be cleared on a reboot or may be erased in the admin settings screen.  It's advisable to only turn on debug mode (in Admin Settings) if you are experiencing problems as this can affect performance of the system.  
+If debug mode is enabled, debug information will be included in the event history.  Debug information will generally be more verbose than the event history.  It's advisable to only turn on debug mode (in Admin Settings) if you are experiencing problems as this can affect performance of the system.  
 
-![Events](/img/webui/PiFire-Events-00.png)
-
-#### Recipes
-
-To be implemented.
+![Events](/img/webui/PiFire-Events-00.jpg)
 
 #### Admin Settings
 
 In the admin settings page, you can set global settings that will configure the system.  These include turning on debug mode, enabling manual mode, and resetting data for the different components (or ALL with Reset Factory Settings)
 
-![Admin](/img/webui/PiFire-Admin-00.png)
+![Admin](/img/webui/PiFire-Admin-00.jpg)
 
 Scrolling down further gives you the option to reboot the system or shutdown the system.  
 
-![Admin](/img/webui/PiFire-Admin-01.png)
+![Admin](/img/webui/PiFire-Admin-01.jpg)
 
 Below these controls, you'll see more information about the system hardware, system temperature, uptime, GPIO Pins, etc.  
 
@@ -489,6 +559,7 @@ You may have noticed that we have a few modules that can be used interchangeably
 * **Grill Platform (grillplat_xxxx.py)**: Used for Input / Output with grill itself.  (i.e. Any Inputs (Buttons / Switche) and Relay Outputs for Fan, Auger, Igniter)
 * **ADC (adc_xxxx.py)**: Used to get data for the different temperature probes (Grill, Probe1, Probe2).
 * **Display (display_xxxx.py)**: Interface for the display.  Used to control and print information to the display.  
+* **Distance / Hopper Level (dist_xxxx.py)**: Interface for getting hopper level input information - used by the pellet manager.  
 
 Adding this layer for these components allows you to create your own modules to support different ADC devices, Display Devices, and Grill configurations.
 
@@ -521,7 +592,7 @@ Of course, none of this project would be available without the wonderful and ama
 
 * **FontAwesome** - Amazing FREE Icons that I use throughout this project.  Copyright Font Awesome.  Released under the Font Awesome Free License. [fontawesome.com](https://fontawesome.com/) [github.com](https://github.com/FortAwesome/Font-Awesome)
 
-* **Luma OLED** - The OLED display module for Python that I use.  This is not distributed in this project, but deserves a shout-out.  Copyright 2014-2020 Richard Hull and contributors. Released under MIT License. [readthedocs.io](https://luma-oled.readthedocs.io/en/latest/) [github.com](https://github.com/rm-hull/luma.oled)
+* **Luma OLED, CORE, LCD** - One of the display modules for Python that I use to interface the SSD1306 or ILI9341 based displays.  This is not distributed in this project, but deserves a shout-out.  Copyright 2014-2020 Richard Hull and contributors. Released under MIT License. [readthedocs.io](https://luma-oled.readthedocs.io/en/latest/) [github.com](https://github.com/rm-hull/luma.oled)
 
 * **ADS1115 Python Module** - Python module to support the ADS1115 16-Bit ADC. Also not actually distributed with this project, but also deserveds recognition.  Copyright David H Hagan. [pypi.com](https://pypi.org/project/ADS1115/) [github.com](https://github.com/vincentrou/ads1115_lib)
 
