@@ -19,12 +19,13 @@ import datetime
 
 class ReadADC:
 
-	def __init__(self, grill_probe_profile, probe_01_profile, probe_02_profile):
+	def __init__(self, grill_probe1_profile, grill_probe2_profile, probe_01_profile, probe_02_profile):
 		self.ads = ADS1115.ADS1115()
-		self.SetProfiles(grill_probe_profile, probe_01_profile, probe_02_profile)
+		self.SetProfiles(grill_probe1_profile, grill_probe2_profile, probe_01_profile, probe_02_profile)
 
-	def SetProfiles(self, grill_probe_profile, probe_01_profile, probe_02_profile):
-		self.grill_probe_profile = grill_probe_profile
+	def SetProfiles(self, grill_probe1_profile, grill_probe2_profile, probe_01_profile, probe_02_profile):
+		self.grill_probe1_profile = grill_probe1_profile
+		self.grill_probe2_profile = grill_probe2_profile
 		self.probe_01_profile = probe_01_profile
 		self.probe_02_profile = probe_02_profile
 
@@ -75,10 +76,10 @@ class ReadADC:
 		return tempF, Tr  # Return Calculated Temperature and Thermistor Value in Ohms
 
 	def ReadAllPorts(self):
-		adc_value = [0,0,0]
+		adc_value = [0,0,0,0]
 
 		try:
-			for index in range(3):
+			for index in range(4):
 				time.sleep(0.05)
 				adc_value[index] = self.ads.readADCSingleEnded(index)
 		except:
@@ -86,19 +87,23 @@ class ReadADC:
 			now = now[0:19] # Truncate the microseconds
 			print(str(now) + ' Error Reading Temperature.')
 			adc_data = {}
-			adc_data['GrillTemp'] = 0
-			adc_data['GrillTr'] = 0 
+			adc_data['Grill1Temp'] = 0
+			adc_data['Grill1Tr'] = 0
 			adc_data['Probe1Temp'] = 0
 			adc_data['Probe1Tr'] = 0
 			adc_data['Probe2Temp'] = 0
 			adc_data['Probe2Tr'] = 0
+			adc_data['Grill2Temp'] = 0
+			adc_data['Grill2Tr'] = 0
 			return(adc_data)
 
 		adc_data = {}
-		adc_data['GrillTemp'], adc_data['GrillTr'] = self.adctotemp(adc_value[0], self.grill_probe_profile)
+		adc_data['Grill1Temp'], adc_data['Grill1Tr'] = self.adctotemp(adc_value[0], self.grill_probe1_profile)
 
 		adc_data['Probe1Temp'], adc_data['Probe1Tr'] = self.adctotemp(adc_value[1], self.probe_01_profile)
 
 		adc_data['Probe2Temp'], adc_data['Probe2Tr'] = self.adctotemp(adc_value[2], self.probe_02_profile)
+
+		adc_data['Grill2Temp'], adc_data['Grill2Tr'] = self.adctotemp(adc_value[3], self.grill_probe2_profile)
 
 		return (adc_data)
