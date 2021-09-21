@@ -449,6 +449,34 @@
 				</div> <!-- End of Column -->
 		</div> <!-- End of Row -->
 
+		<!-- ============================ Shutdown Settings ========================== -->
+		<br>
+		<div class="row">
+			<div class="col">
+				<div class="card shadow">
+
+					<form name="shutdownsettings" action="/settings/shutdown" method="POST">
+
+						<div class="card-header bg-primary text-white"><h5><i class="fas fa-tools"></i>&nbsp; Shutdown Settings</h5></div>
+						<div class="card-body">
+							<h5>Shutdown Setting</h5>
+								<span class="badge badge-warning">NOTE:</span><i class="small"> Amount of time fan will run after shutdown is selected</a></i>
+								<div class="input-group mb-3">
+									<div class="input-group-prepend">
+										<span class="input-group-text" data-toggle="tooltip" title="Shutdown timer (in seconds) (seconds)[Default=60]"><i class="far fa-clock"></i>&nbsp; Shutdown Timer (seconds)</span>
+									</div>
+									<input id="shutdown_timer" type="number" min="1" class="form-control" placeholder="{{ settings['globals']['shutdown_timer'] }}" value="{{ settings['globals']['shutdown_timer'] }}" name="shutdown_timer">
+								</div>
+
+						</div> <!-- End of card body -->
+						<div class="card-footer bg-light">
+								<button type="submit" class="btn btn-outline-primary">Save</button>
+						</div>
+					</form>
+				</div> <!-- End of Card -->
+			</div> <!-- End of Column -->
+		</div> <!-- End of Row -->
+
 		<!-- ============================ History Settings ========================== -->
 		<br>
 		<div class="row">
@@ -634,6 +662,44 @@
 											</div>
 
 											<input id="pushover_publicurl" type="text" class="form-control" name="pushover_publicurl" value="{{settings['pushover']['PublicURL']}}">
+
+											<div class="input-group-append">
+													<button type="submit" class="btn btn-success btn-sm float-right"><i class="far fa-save"></i></button>
+											</div>
+										</div>
+										
+
+									</form>
+									
+								</div> <!-- End of card body -->
+							</div> <!-- End of Card -->
+							<BR>
+							<div class="card shadow-sm">
+								<div class="card-header bg-light text-dark"><h5>Pushbullet</h5></div>
+								<div class="card-body">
+
+									<form name="notify" action="/settings/notify" method="POST">
+
+									  <div class="input-group mb-3">
+									    <div class="input-group-prepend">
+									      <span class="input-group-text"><i class="fas fa-key"></i>&nbsp; API Key</span>
+									    </div>
+
+											<input id="pushbullet_apikey" type="text" class="form-control" name="pushbullet_apikey" value="{{settings['pushbullet']['APIKey']}}">
+
+											<div class="input-group-append">
+													<button type="submit" class="btn btn-success btn-sm float-right"><i class="far fa-save"></i></button>
+											</div>
+
+									  </div>
+
+										<span class="badge badge-warning">NOTE:</span><i class="small"> URL to be added to Pushbullet notifications.</i>
+										<div class="input-group mb-3">
+											<div class="input-group-prepend">
+												<span class="input-group-text"><i class="fas fa-link"></i>&nbsp; Public URL</span>
+											</div>
+
+											<input id="pushbullet_publicurl" type="text" class="form-control" name="pushbullet_publicurl" value="{{settings['pushbullet']['PublicURL']}}">
 
 											<div class="input-group-append">
 													<button type="submit" class="btn btn-success btn-sm float-right"><i class="far fa-save"></i></button>

@@ -42,11 +42,17 @@ def DefaultSettings():
 		'page_theme' : 'light',
 		'triggerlevel' : 'LOW',
 		'buttonslevel' : 'HIGH',
+		'shutdown_timer' : 60,
 		'units' : 'F'
 	}
 
 	settings['ifttt'] = {
 		'APIKey': '', # API Key for WebMaker IFTTT App notification
+	}
+
+	settings['pushbullet'] = {
+		'APIKey': '', # API Key for Pushbullet notifications
+		'PublicURL': '', # Used in Pushbullet notifications
 	}
 
 	settings['pushover'] = {
