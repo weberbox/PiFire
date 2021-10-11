@@ -243,6 +243,9 @@ def WorkCycle(mode, grill_platform, adc_device, display_device, dist_device):
 	# Initialize Current Auger State Structure
 	current_output_status = {}
 
+	# Set Hold Mode Target Temp Boolean
+	target_temp_achieved = False
+
 	# ============ Main Work Cycle ============
 	while(status == 'Active'):
 		now = time.time()
@@ -250,8 +253,8 @@ def WorkCycle(mode, grill_platform, adc_device, display_device, dist_device):
 		# Check for button input event
 		display_device.EventDetect()
 
-		# Check for update in control status every 0.5 seconds 
-		if (now - controlchecktime > 0.5):
+		# Check for update in control status every 0.1 seconds 
+		if (now - controlchecktime > 0.1):
 			control = ReadControl()
 			controlchecktime = now
 
@@ -428,8 +431,12 @@ def WorkCycle(mode, grill_platform, adc_device, display_device, dist_device):
 				WriteControl(control)
 				SendNotifications("Grill_Error_01", control, settings)
 
+		# Check if target temperature has been achieved before utilizing Smoke Plus Mode
+		if((mode == 'Hold') and (AvgGT >= control['setpoints']['grill']) and (target_temp_achieved==False)):
+			target_temp_achieved = True
+
 		# If in Smoke Plus Mode, Cycle the Fan
-		if(((mode == 'Smoke') or (mode == 'Hold')) and (control['s_plus'] == True)):
+		if(((mode == 'Smoke') or ((mode == 'Hold') and (target_temp_achieved))) and (control['s_plus'] == True)):
 			# If Temperature is > settings['smoke_plus']['max_temp'] then turn on fan
 			if(AvgGT > settings['smoke_plus']['max_temp']):
 				grill_platform.FanOn()
@@ -1127,6 +1134,7 @@ def CheckNotify(in_data, control, settings):
 			if(control['notify_data']['p1_shutdown'] == True)and((control['mode'] == 'Smoke')or(control['mode'] == 'Hold')or(control['mode'] == 'Startup')or(control['mode'] == 'Reignite')):
 				control['mode'] = 'Shutdown'
 				control['updated'] = True
+				control['notify_data']['p1_shutdown'] = False
 			WriteControl(control)
 
 	if (control['notify_req']['probe2']):
@@ -1137,6 +1145,7 @@ def CheckNotify(in_data, control, settings):
 			if(control['notify_data']['p2_shutdown'] == True)and((control['mode'] == 'Smoke')or(control['mode'] == 'Hold')or(control['mode'] == 'Startup')or(control['mode'] == 'Reignite')):
 				control['mode'] = 'Shutdown'
 				control['updated'] = True
+				control['notify_data']['p2_shutdown'] = False
 			WriteControl(control)
 
 	if (control['notify_req']['timer']):

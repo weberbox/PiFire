@@ -47,6 +47,7 @@ def DefaultSettings():
 		'triggerlevel' : 'LOW',
 		'buttonslevel' : 'HIGH',
 		'shutdown_timer' : 60,
+		'four_probes' : True,
 		'units' : 'F'
 	}
 
@@ -526,7 +527,7 @@ def ReadLog():
 	num_events = len(event_lines)
 
 	for x in range(num_events):
-		event_list.append(event_lines[x].split(" ",2))
+		event_list.insert(0, event_lines[x].split(" ",2))
 
 	# Error handling if number of events is less than 10, fill array with empty
 	if (num_events < 10):
@@ -583,8 +584,22 @@ def ReadHistory(num_items=0, flushhistory=False):
 			for index in range(len(data)):
 				data_list.append(data[index].split(' ', 6))  # Splits out each of the values into seperate list items 
 		else:
-			event = 'WARNING: History data is not present in database.'
+			event = 'WARNING: History data is not present in database. Creating Data Structure.'
 			WriteLog(event)
+			# Create Entry in Database
+			TempStruct = {
+				'GrillTemp': 0, 
+				'GrillSetPoint': 0,
+				'Probe1Temp': 0, 
+				'Probe1SetPoint': 0, 
+				'Probe2Temp': 0, 
+				'Probe2SetPoint': 0,
+				'GrillTr': 0,
+				'Probe1Tr': 0,
+				'Probe2Tr': 0
+			}
+			WriteHistory(TempStruct)
+			data_list = ReadHistory()
 
 	return(data_list)
 
