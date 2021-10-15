@@ -177,13 +177,15 @@ def WorkCycle(mode, grill_platform, adc_device, display_device, dist_device):
 	adc_data = {}
 	adc_data = adc_device.ReadAllPorts()
 
-	if (settings['grill_probe_settings']['grill_probe_enabled'][0] == 1):
-		AvgGT = adc_data['Grill1Temp']
+	if(settings['globals']['four_probes'] == True):
+		if (settings['grill_probe_settings']['grill_probe_enabled'][2] == 1):
+			AvgGT = (adc_data['Grill1Temp'] + adc_data['Grill2Temp']) / 2
+		elif (settings['grill_probe_settings']['grill_probe_enabled'][1] == 1):
+			AvgGT = adc_data['Grill2Temp']
+		else:
+			AvgGT = adc_data['Grill1Temp']
 	else:
-		AvgGT = adc_data['Grill2Temp']
-
-	AvgP1 = adc_data['Probe1Temp']
-	AvgP2 = adc_data['Probe2Temp']
+		AvgGT = adc_data['Grill1Temp']
 
 	status = 'Active'
 
@@ -346,12 +348,21 @@ def WorkCycle(mode, grill_platform, adc_device, display_device, dist_device):
 		adc_data = adc_device.ReadAllPorts()
 
 		# Test temperature data returned for errors (+/- 20% Temp Variance), and average the data since last reading
-		if (settings['grill_probe_settings']['grill_probe_enabled'][0] == 1):
-			if((adc_data['Grill1Temp'] != 0) and (adc_data['Grill1Temp'] >= AvgGT * 0.8) and (adc_data['Grill1Temp'] <= AvgGT * 1.2)):
-				AvgGT = (adc_data['Grill1Temp'] + AvgGT) / 2
+		if(settings['globals']['four_probes'] == True):
+			if (settings['grill_probe_settings']['grill_probe_enabled'][2] == 1):
+				if(adc_data['Grill1Temp'] != 0 and adc_data['Grill2Temp'] !=0):
+					if((adc_data['Grill1Temp'] >= AvgGT * 0.8) and (adc_data['Grill1Temp'] <= AvgGT * 1.2)):
+						if((adc_data['Grill2Temp'] >= AvgGT * 0.8) and (adc_data['Grill2Temp'] <= AvgGT * 1.2)):
+							AvgGT = (adc_data['Grill1Temp'] + adc_data['Grill2Temp']) / 2
+			elif (settings['grill_probe_settings']['grill_probe_enabled'][1] == 1):
+				if((adc_data['Grill2Temp'] != 0) and (adc_data['Grill2Temp'] >= AvgGT * 0.8) and (adc_data['Grill2Temp'] <= AvgGT * 1.2)):
+					AvgGT = (adc_data['Grill2Temp'] + AvgGT) / 2
+			else:
+				if((adc_data['Grill1Temp'] != 0) and (adc_data['Grill1Temp'] >= AvgGT * 0.8) and (adc_data['Grill1Temp'] <= AvgGT * 1.2)):
+					AvgGT = (adc_data['Grill1Temp'] + AvgGT) / 2
 		else:
-			if((adc_data['Grill2Temp'] != 0) and (adc_data['Grill2Temp'] >= AvgGT * 0.8) and (adc_data['Grill2Temp'] <= AvgGT * 1.2)):
-				AvgGT = (adc_data['Grill2Temp'] + AvgGT) / 2
+			if((adc_data['Grill1Temp'] != 0) and (adc_data['Grill1Temp'] >= AvgGT * 0.8) and (adc_data['Grill1Temp'] <= AvgGT * 1.2)):
+					AvgGT = (adc_data['Grill1Temp'] + AvgGT) / 2
 
 		if((adc_data['Probe1Temp'] != 0) and (adc_data['Probe1Temp'] >= AvgP1 * 0.8) and (adc_data['Probe1Temp'] <= AvgP1 * 1.2)):
 			AvgP1 = (adc_data['Probe1Temp'] + AvgP1) / 2
@@ -536,10 +547,16 @@ def Monitor(grill_platform, adc_device, display_device, dist_device):
 	adc_data = {}
 	adc_data = adc_device.ReadAllPorts()
 
-	if (settings['grill_probe_settings']['grill_probe_enabled'][0] == 1):
-		AvgGT = adc_data['Grill1Temp']
+	if(settings['globals']['four_probes'] == True):
+		if (settings['grill_probe_settings']['grill_probe_enabled'][2] == 1):
+			AvgGT = (adc_data['Grill1Temp'] + adc_data['Grill2Temp']) / 2
+		elif (settings['grill_probe_settings']['grill_probe_enabled'][1] == 1):
+			AvgGT = adc_data['Grill2Temp']
+		else:
+			AvgGT = adc_data['Grill1Temp']
 	else:
-		AvgGT = adc_data['Grill2Temp']
+		AvgGT = adc_data['Grill1Temp']
+
 	AvgP1 = adc_data['Probe1Temp']
 	AvgP2 = adc_data['Probe2Temp']
 
@@ -620,10 +637,16 @@ def Monitor(grill_platform, adc_device, display_device, dist_device):
 		adc_data = {}
 		adc_data = adc_device.ReadAllPorts()
 
-		if (settings['grill_probe_settings']['grill_probe_enabled'][0] == 1):
-			AvgGT = (adc_data['Grill1Temp'] + AvgGT) / 2
+		if(settings['globals']['four_probes'] == True):
+			if (settings['grill_probe_settings']['grill_probe_enabled'][2] == 1):
+				AvgGT = ((adc_data['Grill1Temp'] + adc_data['Grill2Temp']) / 2 + AvgGT) / 2
+			elif (settings['grill_probe_settings']['grill_probe_enabled'][1] == 1):
+				AvgGT = (adc_data['Grill2Temp'] + AvgGT) / 2
+			else:
+				AvgGT = (adc_data['Grill1Temp'] + AvgGT) / 2
 		else:
-			AvgGT = (adc_data['Grill2Temp'] + AvgGT) / 2
+			AvgGT = (adc_data['Grill1Temp'] + AvgGT) / 2
+
 		AvgP1 = (adc_data['Probe1Temp'] + AvgP1) / 2
 		AvgP2 = (adc_data['Probe2Temp'] + AvgP2) / 2
 
@@ -716,10 +739,16 @@ def Manual_Mode(grill_platform, adc_device, display_device, dist_device):
 	adc_data = {}
 	adc_data = adc_device.ReadAllPorts()
 
-	if (settings['grill_probe_settings']['grill_probe_enabled'][0] == 1):
-		AvgGT = adc_data['Grill1Temp']
+	if(settings['globals']['four_probes'] == True):
+		if (settings['grill_probe_settings']['grill_probe_enabled'][2] == 1):
+			AvgGT = (adc_data['Grill1Temp'] + adc_data['Grill2Temp']) / 2
+		elif (settings['grill_probe_settings']['grill_probe_enabled'][1] == 1):
+			AvgGT = adc_data['Grill2Temp']
+		else:
+			AvgGT = adc_data['Grill1Temp']
 	else:
-		AvgGT = adc_data['Grill2Temp']
+		AvgGT = adc_data['Grill1Temp']
+
 	AvgP1 = adc_data['Probe1Temp']
 	AvgP2 = adc_data['Probe2Temp']
 
@@ -809,10 +838,16 @@ def Manual_Mode(grill_platform, adc_device, display_device, dist_device):
 		adc_data = {}
 		adc_data = adc_device.ReadAllPorts()
 
-		if (settings['grill_probe_settings']['grill_probe_enabled'][0] == 1):
-			AvgGT = (adc_data['Grill1Temp'] + AvgGT) / 2
+		if(settings['globals']['four_probes'] == True):
+			if (settings['grill_probe_settings']['grill_probe_enabled'][2] == 1):
+				AvgGT = ((adc_data['Grill1Temp'] + adc_data['Grill2Temp']) / 2 + AvgGT) / 2
+			elif (settings['grill_probe_settings']['grill_probe_enabled'][1] == 1):
+				AvgGT = (adc_data['Grill2Temp'] + AvgGT) / 2
+			else:
+				AvgGT = (adc_data['Grill1Temp'] + AvgGT) / 2
 		else:
-			AvgGT = (adc_data['Grill2Temp'] + AvgGT) / 2
+			AvgGT = (adc_data['Grill1Temp'] + AvgGT) / 2
+
 		AvgP1 = (adc_data['Probe1Temp'] + AvgP1) / 2
 		AvgP2 = (adc_data['Probe2Temp'] + AvgP2) / 2
 

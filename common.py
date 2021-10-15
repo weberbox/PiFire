@@ -85,7 +85,7 @@ def DefaultSettings():
 	settings['grill_probe_settings'] = {
 		'grill_probes': GrillProbes(),
 		'grill_probe' : 'grill_probe1',
-		'grill_probe_enabled' : [1,0]
+		'grill_probe_enabled' : [1,0,0]
 	}
 
 	settings['outpins'] = {
@@ -360,6 +360,10 @@ def GrillProbes():
 
 	grill_probes['grill_probe2'] = {
 		'name' : 'Grill Probe 2'
+	}
+	
+	grill_probes['grill_probe3'] = {
+		'name' : 'Avg Grill Probes'
 	}
 	
 	return grill_probes

@@ -659,12 +659,21 @@ def settingspage(action=None):
 			if(response['grill_probes'] == 'grill_probe1'):
 				settings['grill_probe_settings']['grill_probe_enabled'][0] = 1
 				settings['grill_probe_settings']['grill_probe_enabled'][1] = 0
+				settings['grill_probe_settings']['grill_probe_enabled'][2] = 0
 				settings['grill_probe_settings']['grill_probe'] = response['grill_probes']
 				event['type'] = 'updated'
 				event['text'] = 'Grill Probe selection updated. Settings saved.'
 			elif(response['grill_probes'] == 'grill_probe2'):
 				settings['grill_probe_settings']['grill_probe_enabled'][0] = 0
 				settings['grill_probe_settings']['grill_probe_enabled'][1] = 1
+				settings['grill_probe_settings']['grill_probe_enabled'][2] = 0
+				settings['grill_probe_settings']['grill_probe'] = response['grill_probes']
+				event['type'] = 'updated'
+				event['text'] = 'Grill Probe selection updated. Settings saved.'
+			elif(response['grill_probes'] == 'grill_probe3'):
+				settings['grill_probe_settings']['grill_probe_enabled'][0] = 0
+				settings['grill_probe_settings']['grill_probe_enabled'][1] = 0
+				settings['grill_probe_settings']['grill_probe_enabled'][2] = 1
 				settings['grill_probe_settings']['grill_probe'] = response['grill_probes']
 				event['type'] = 'updated'
 				event['text'] = 'Grill Probe selection updated. Settings saved.'
@@ -863,6 +872,12 @@ def settingspage(action=None):
 		if('derivtime' in response):
 			if(response['derivtime'] != ''):
 				settings['cycle_data']['Td'] = float(response['derivtime'])
+		if('u_min' in response):
+			if(response['u_min'] != ''):
+				settings['cycle_data']['u_min'] = float(response['u_min'])
+		if('u_max' in response):
+			if(response['u_max'] != ''):
+				settings['cycle_data']['u_max'] = float(response['u_max'])
 		if('sp_cycle' in response):
 			if(response['sp_cycle'] != ''):
 				settings['smoke_plus']['cycle'] = int(response['sp_cycle'])
@@ -1668,11 +1683,6 @@ def update_settings(json_data):
 				settings['probe_settings']['grill_probe_enabled'][1] = 0
 			else:
 				settings['probe_settings']['grill_probe_enabled'][1] = 1
-		#if('grill0enable' in data['probes']):
-			#if(data['probes']['grill0enable']=='true'):
-				#settings['probe_settings']['probes_enabled'][0] = 1
-			#else:
-				#settings['probe_settings']['probes_enabled'][0] = 0
 		if('probe1enable' in data['probes']):
 			if(data['probes']['probe1enable']=='true'):
 				settings['probe_settings']['probes_enabled'][1] = 1
@@ -1687,15 +1697,18 @@ def update_settings(json_data):
 			if(data['probes']['grill_probes'] == 'grill_probe1'):
 				settings['grill_probe_settings']['grill_probe_enabled'][0] = 1
 				settings['grill_probe_settings']['grill_probe_enabled'][1] = 0
+				settings['grill_probe_settings']['grill_probe_enabled'][2] = 0
 				settings['grill_probe_settings']['grill_probe'] = data['probes']['grill_probes']
 			elif(data['probes']['grill_probes'] == 'grill_probe2'):
 				settings['grill_probe_settings']['grill_probe_enabled'][0] = 0
 				settings['grill_probe_settings']['grill_probe_enabled'][1] = 1
+				settings['grill_probe_settings']['grill_probe_enabled'][2] = 0
 				settings['grill_probe_settings']['grill_probe'] = data['probes']['grill_probes']
-		#if('grill_probe_type' in data['probes']):
-			#if(data['probes']['grill_probe_type'] != settings['probe_types']['grill0type']):
-				#settings['probe_types']['grill0type'] = data['probes']['grill_probe_type']
-				#control['probe_profile_update'] = True
+			elif(data['probes']['grill_probes'] == 'grill_probe3'):
+				settings['grill_probe_settings']['grill_probe_enabled'][0] = 0
+				settings['grill_probe_settings']['grill_probe_enabled'][1] = 0
+				settings['grill_probe_settings']['grill_probe_enabled'][2] = 1
+				settings['grill_probe_settings']['grill_probe'] = data['probes']['grill_probes']
 		if('grill_probe1_type' in data['probes']):
 			if(data['probes']['grill_probe1_type'] != settings['probe_types']['grill1type']):
 				settings['probe_types']['grill1type'] = data['probes']['grill_probe1_type']
@@ -1801,6 +1814,12 @@ def update_settings(json_data):
 		if('derivtime' in data['cycle']):
 			if(data['cycle']['derivtime'] != ''):
 				settings['cycle_data']['Td'] = float(data['cycle']['derivtime'])
+		if('u_min' in data['cycle']):
+			if(data['cycle']['u_min'] != ''):
+				settings['cycle_data']['u_min'] = float(data['cycle']['u_min'])
+		if('u_max' in data['cycle']):
+			if(data['cycle']['u_max'] != ''):
+				settings['cycle_data']['u_max'] = float(data['cycle']['u_max'])
 		if('sp_cycle' in data['cycle']):
 			if(data['cycle']['sp_cycle'] != ''):
 				settings['smoke_plus']['cycle'] = int(data['cycle']['sp_cycle'])
