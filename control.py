@@ -362,7 +362,7 @@ def WorkCycle(mode, grill_platform, adc_device, display_device, dist_device):
 					AvgGT = (adc_data['Grill1Temp'] + AvgGT) / 2
 		else:
 			if((adc_data['Grill1Temp'] != 0) and (adc_data['Grill1Temp'] >= AvgGT * 0.8) and (adc_data['Grill1Temp'] <= AvgGT * 1.2)):
-					AvgGT = (adc_data['Grill1Temp'] + AvgGT) / 2
+				AvgGT = (adc_data['Grill1Temp'] + AvgGT) / 2
 
 		if((adc_data['Probe1Temp'] != 0) and (adc_data['Probe1Temp'] >= AvgP1 * 0.8) and (adc_data['Probe1Temp'] <= AvgP1 * 1.2)):
 			AvgP1 = (adc_data['Probe1Temp'] + AvgP1) / 2
