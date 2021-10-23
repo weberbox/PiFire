@@ -163,6 +163,9 @@ def WorkCycle(mode, grill_platform, adc_device, display_device, dist_device):
 	Probe1Temp = 0
 	Probe2Temp = 0
 
+	# Check pellets level notification upon starting cycle
+	CheckNotifyPellets(control, settings, pelletdb)
+
 	# Collect Initial Temperature Information
 	# Get Probe Types From Settings
 
@@ -242,6 +245,9 @@ def WorkCycle(mode, grill_platform, adc_device, display_device, dist_device):
 	# Set time since last control check
 	controlchecktime = starttime
 
+	# Set time since last pellet level check
+	pelletschecktime = starttime
+
 	# Initialize Current Auger State Structure
 	current_output_status = {}
 
@@ -259,6 +265,11 @@ def WorkCycle(mode, grill_platform, adc_device, display_device, dist_device):
 		if (now - controlchecktime > 0.1):
 			control = ReadControl()
 			controlchecktime = now
+
+		# Check for pellet level notifications every 20 minutes
+		if (now - pelletschecktime > 1200):
+			CheckNotifyPellets(control, settings, pelletdb)
+			pelletschecktime = now
 
 		# Check if new mode has been requested 
 		if (control['updated'] == True):
@@ -393,7 +404,7 @@ def WorkCycle(mode, grill_platform, adc_device, display_device, dist_device):
 		in_data['Probe2Tr'] = adc_data['Probe2Tr']  # For Temp Resistance Tuning
 
 		# Check to see if there are any pending notifications (i.e. Timer / Temperature Settings)
-		control = CheckNotify(in_data, control, settings)
+		control = CheckNotify(in_data, control, settings, pelletdb)
 
 		# Check for button input event
 		display_device.EventDetect()
@@ -534,6 +545,9 @@ def Monitor(grill_platform, adc_device, display_device, dist_device):
 	control = ReadControl()
 	pelletdb = ReadPelletDB()
 
+	# Check pellets level notification upon starting cycle
+	CheckNotifyPellets(control, settings, pelletdb)
+
 	# Collect Initial Temperature Information
 	# Get Probe Types From Settings
 	grill1type = settings['probe_types']['grill1type']
@@ -574,6 +588,9 @@ def Monitor(grill_platform, adc_device, display_device, dist_device):
 	# Set time since last control check
 	controlchecktime = now
 
+	# Set time since last pellet level check
+	pelletschecktime = now
+
 	status = 'Active'
 
 	while(status == 'Active'):
@@ -582,7 +599,12 @@ def Monitor(grill_platform, adc_device, display_device, dist_device):
 		# Check for update in control status every 0.5 seconds 
 		if (now - controlchecktime > 0.5):
 			control = ReadControl()
-			controlchecktime = now 
+			controlchecktime = now
+
+		# Check for pellet level notifications every 20 minutes
+		if (now - pelletschecktime > 1200):
+			CheckNotifyPellets(control, settings, pelletdb)
+			pelletschecktime = now
 
 		# Check for update in control status
 		if (control['updated'] == True):
@@ -664,7 +686,7 @@ def Monitor(grill_platform, adc_device, display_device, dist_device):
 		in_data['Probe1Tr'] = adc_data['Probe1Tr']
 		in_data['Probe2Tr'] = adc_data['Probe2Tr']
 		
-		control = CheckNotify(in_data, control, settings)
+		control = CheckNotify(in_data, control, settings, pelletdb)
 
 		# Check for button input event
 		display_device.EventDetect()
@@ -871,7 +893,7 @@ def Manual_Mode(grill_platform, adc_device, display_device, dist_device):
 			display_device.DisplayStatus(in_data, status_data)
 			displaytoggletime = now 
 
-		control = CheckNotify(in_data, control, settings) 
+		control = CheckNotify(in_data, control, settings, pelletdb)
 
 		# Write History after 3 seconds has passed
 		if (now - temptoggletime > 3):
@@ -932,7 +954,7 @@ def Recipe_Mode(grill_platform, adc_device, display_device, dist_device):
 # Send Pushover Notifications
 # ******************************
 
-def SendPushoverNotification(notifyevent, control, settings):
+def SendPushoverNotification(notifyevent, control, settings, pelletdb):
 	now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
 
 	if "Grill_Temp_Achieved" in notifyevent:
@@ -947,6 +969,9 @@ def SendPushoverNotification(notifyevent, control, settings):
 	elif "Timer_Expired" in notifyevent:
 		notifymessage = "Your grill timer has expired, time to check your cook!"
 		subjectmessage = "Grill Timer Complete: " + str(now)
+	elif "Pellet_Level_Low" in notifyevent:
+		notifymessage = "Your pellet level is currently at " + str(pelletdb['current']['hopper_level']) + "%"
+		subjectmessage = "Low Pellet Level"
 	elif "Grill_Error_00" in notifyevent:
 		notifymessage = "Your grill has experienced an error and will shutdown now. " + str(now)
 		subjectmessage = "Grill Error!"
@@ -988,7 +1013,7 @@ def SendPushoverNotification(notifyevent, control, settings):
 # Send Pushbullet Notifications
 # ******************************
 
-def SendPushBulletNotification(notifyevent, control, settings):
+def SendPushBulletNotification(notifyevent, control, settings, pelletdb):
 	now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
 
 	if "Grill_Temp_Achieved" in notifyevent:
@@ -1003,6 +1028,9 @@ def SendPushBulletNotification(notifyevent, control, settings):
 	elif "Timer_Expired" in notifyevent:
 		notifymessage = "Your grill timer has expired, time to check your cook!"
 		subjectmessage = "Grill Timer Complete: " + str(now)
+	elif "Pellet_Level_Low" in notifyevent:
+		notifymessage = "Your pellet level is currently at " + str(pelletdb['current']['hopper_level']) + "%"
+		subjectmessage = "Low Pellet Level"
 	elif "Grill_Error_00" in notifyevent:
 		notifymessage = "Your grill has experienced an error and will shutdown now. " + str(now)
 		subjectmessage = "Grill Error!"
@@ -1033,7 +1061,7 @@ def SendPushBulletNotification(notifyevent, control, settings):
 # Send Firebase Notifications
 # ******************************
 
-def SendFirebaseNotification(notifyevent, control, settings):
+def SendFirebaseNotification(notifyevent, control, settings, pelletdb):
 	date = datetime.datetime.now()
 	now = date.strftime('%m-%d %H:%M')
 	time = date.strftime('%H:%M')
@@ -1059,6 +1087,11 @@ def SendFirebaseNotification(notifyevent, control, settings):
 		bodymessage = "Your grill timer has expired, time to check your cook!"
 		sound = 'timer_alarm'
 		channel = 'pifire_timer_alerts'
+	elif "Pellet_Level_Low" in notifyevent:
+		titlemessage = "Low Pellet Level"
+		bodymessage = "Your pellet level is currently at " + str(pelletdb['current']['hopper_level']) + "%"
+		sound = 'pellet_alarm'
+		channel = 'pifire_pellet_alerts'
 	elif "Grill_Error_00" in notifyevent:
 		titlemessage = "Grill Error!"
 		bodymessage = "Your grill has experienced an error and will shutdown now. " + str(now)
@@ -1120,7 +1153,7 @@ def SendFirebaseNotification(notifyevent, control, settings):
 # Send IFTTT Notifications
 # ******************************
 
-def SendIFTTTNotification(notifyevent, control, settings):
+def SendIFTTTNotification(notifyevent, control, settings, pelletdb):
 
 	now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
 
@@ -1132,6 +1165,8 @@ def SendIFTTTNotification(notifyevent, control, settings):
 		query_args = { "value1" : str(control['setpoints']['probe2']) }
 	elif "Timer_Expired" in notifyevent:
 		query_args = { "value1" : 'Your grill timer has expired.' }
+	elif "Pellet_Level_Low" in notifyevent:
+		query_args = { "value1" : 'Pellet level currently at ' + str(pelletdb['current']['hopper_level']) + '%' }
 	elif "Grill_Error_00" in notifyevent:
 		query_args = { "value1" : 'Your grill has experienced an error and will shutdown now. ' }
 	elif "Grill_Error_01" in notifyevent:
@@ -1157,33 +1192,33 @@ def SendIFTTTNotification(notifyevent, control, settings):
 # Send Notifications
 # ******************************
 
-def SendNotifications(notifyevent, control, settings):
+def SendNotifications(notifyevent, control, settings, pelletdb):
 
 	if(settings['ifttt']['APIKey'] != '' and settings['ifttt']['enabled'] == True):
-		SendIFTTTNotification(notifyevent, control, settings)
+		SendIFTTTNotification(notifyevent, control, settings, pelletdb)
 	if(settings['pushbullet']['APIKey'] != '' and settings['pushbullet']['enabled'] == True):
-		SendPushBulletNotification(notifyevent, control, settings)
+		SendPushBulletNotification(notifyevent, control, settings, pelletdb)
 	if(settings['pushover']['APIKey'] != '' and settings['pushover']['UserKeys'] != '' and settings['pushover']['enabled'] == True):
-		SendPushoverNotification(notifyevent, control, settings)
+		SendPushoverNotification(notifyevent, control, settings, pelletdb)
 	if(settings['firebase']['ServerKey'] != '' and settings['firebase']['enabled'] == True):
-		SendFirebaseNotification(notifyevent, control, settings)
+		SendFirebaseNotification(notifyevent, control, settings, pelletdb)
 
 # ******************************
 # Check for any pending notifications
 # ******************************
 
-def CheckNotify(in_data, control, settings):
+def CheckNotify(in_data, control, settings, pelletdb):
 
 	if (control['notify_req']['grill'] == True):
 		if (in_data['GrillTemp'] >= control['setpoints']['grill']):
 			#control = ReadControl()  # Read Modify Write
 			control['notify_req']['grill'] = False
 			WriteControl(control)
-			SendNotifications("Grill_Temp_Achieved", control, settings)
+			SendNotifications("Grill_Temp_Achieved", control, settings, pelletdb)
 
 	if (control['notify_req']['probe1']):
 		if (in_data['Probe1Temp'] >= control['setpoints']['probe1']):
-			SendNotifications("Probe1_Temp_Achieved", control, settings)
+			SendNotifications("Probe1_Temp_Achieved", control, settings, pelletdb)
 			#control = ReadControl()  # Read Modify Write
 			control['notify_req']['probe1'] = False
 			if(control['notify_data']['p1_shutdown'] == True)and((control['mode'] == 'Smoke')or(control['mode'] == 'Hold')or(control['mode'] == 'Startup')or(control['mode'] == 'Reignite')):
@@ -1194,7 +1229,7 @@ def CheckNotify(in_data, control, settings):
 
 	if (control['notify_req']['probe2']):
 		if (in_data['Probe2Temp'] >= control['setpoints']['probe2']):
-			SendNotifications("Probe2_Temp_Achieved", control, settings)
+			SendNotifications("Probe2_Temp_Achieved", control, settings, pelletdb)
 			#control = ReadControl()  # Read Modify Write
 			control['notify_req']['probe2'] = False
 			if(control['notify_data']['p2_shutdown'] == True)and((control['mode'] == 'Smoke')or(control['mode'] == 'Hold')or(control['mode'] == 'Startup')or(control['mode'] == 'Reignite')):
@@ -1205,7 +1240,7 @@ def CheckNotify(in_data, control, settings):
 
 	if (control['notify_req']['timer']):
 		if (time.time() >= control['timer']['end']):
-			SendNotifications("Timer_Expired", control, settings)
+			SendNotifications("Timer_Expired", control, settings, pelletdb)
 			#control = ReadControl()  # Read Modify Write
 			if(control['notify_data']['timer_shutdown'] == True)and((control['mode'] == 'Smoke')or(control['mode'] == 'Hold')or(control['mode'] == 'Startup')or(control['mode'] == 'Reignite')):
 				control['mode'] = 'Shutdown'
@@ -1218,6 +1253,16 @@ def CheckNotify(in_data, control, settings):
 			WriteControl(control)
 
 	return(control)
+
+# ******************************
+# Check for any pending pellet notifications
+# ******************************
+
+def CheckNotifyPellets(control, settings, pelletdb):
+
+	if (settings['pelletlevel']['warning_enabled'] == True):
+		if (pelletdb['current']['hopper_level'] <= settings['pelletlevel']['warning_level']):
+			SendNotifications("Pellet_Level_Low", control, settings, pelletdb)
 
 # *****************************************
 # Main Program Start / Init

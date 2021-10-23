@@ -19,6 +19,10 @@ test-working.json
 
 .vscode/
 
+venv/
+
+.idea/
+
 *.code-workspace
 
 test.json

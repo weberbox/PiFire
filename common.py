@@ -136,6 +136,8 @@ def DefaultSettings():
 	}
 
 	settings['pelletlevel'] = {
+		'warning_enabled' : True,
+		'warning_level' : 25,
 		'empty' : 22, # Number of centimeters from the sensor that indicates empty
 		'full' : 4  # Number of centimeters from the sensor that indicates full
 	}
@@ -451,9 +453,9 @@ def WriteSettings(settings):
 	# *****************************************
 	settings['lastupdated']['time'] = math.trunc(time.time())
 
-	json_data_string = json.dumps(settings)
+	json_data_string = json.dumps(settings, indent=2, sort_keys=True)
 	with open("settings.json", 'w') as settings_file:
-	    settings_file.write(json_data_string)
+		settings_file.write(json_data_string)
 
 def ReadRecipes():
 	# *****************************************
