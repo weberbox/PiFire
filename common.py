@@ -142,12 +142,20 @@ def DefaultSettings():
 		'full' : 4  # Number of centimeters from the sensor that indicates full
 	}
 
-	settings['modules'] = {
-		'grillplat' : 'pifire',	 	# Grill Platform (PiFire - Raspberry Pi GPIOs)
-		'adc' : 'ads1115',			# Analog to Digital Converter Default is the ADS1115
-		'display' : 'ssd1306',		# Default display is the SSD1306
-		'dist' : 'prototype'		# Default distance sensor is none
-	}
+	if isRaspberryPi():
+		settings['modules'] = {
+			'grillplat' : 'pifire',	 	# Grill Platform (PiFire - Raspberry Pi GPIOs)
+			'adc' : 'ads1115',			# Analog to Digital Converter Default is the ADS1115
+			'display' : 'ssd1306',		# Default display is the SSD1306
+			'dist' : 'prototype'		# Default distance sensor is none
+		}
+	else:
+		settings['modules'] = {
+			'grillplat' : 'prototype',
+			'adc' : 'prototype',
+			'display' : 'prototype',
+			'dist' : 'prototype'
+		}
 
 	settings['lastupdated'] = {
 		'time' : math.trunc(time.time())
@@ -374,6 +382,13 @@ def GrillProbes():
 	}
 	
 	return grill_probes
+
+def isRaspberryPi():
+	try:
+		from RPi import GPIO
+		return True
+	except(ImportError, RuntimeError):
+		return False
 
 def ReadControl(flush=False):
 	global cmdsts
