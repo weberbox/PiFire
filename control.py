@@ -190,6 +190,9 @@ def WorkCycle(mode, grill_platform, adc_device, display_device, dist_device):
 	else:
 		AvgGT = adc_data['Grill1Temp']
 
+	AvgP1 = adc_data['Probe1Temp']
+	AvgP2 = adc_data['Probe2Temp']
+
 	status = 'Active'
 
 	# Safety Controls

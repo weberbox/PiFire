@@ -1,4 +1,6 @@
 
+generated/
+
 *.pyc
 
 control.err.log
