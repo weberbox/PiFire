@@ -214,7 +214,7 @@ def WorkCycle(mode, grill_platform, adc_device, display_device, dist_device):
 				control['mode'] = 'Error'
 				control['updated'] = True
 				WriteControl(control)
-				SendNotifications("Grill_Error_02", control, settings)
+				SendNotifications("Grill_Error_02", control, settings, pelletdb)
 			else:
 				#control = ReadControl()  # Read Modify Write
 				control['safety']['reigniteretries'] -= 1
@@ -432,7 +432,7 @@ def WorkCycle(mode, grill_platform, adc_device, display_device, dist_device):
 					control['mode'] = 'Error'
 					control['updated'] = True
 					WriteControl(control)
-					SendNotifications("Grill_Error_02", control, settings)
+					SendNotifications("Grill_Error_02", control, settings, pelletdb)
 				else:
 					control['safety']['reigniteretries'] -= 1
 					control['safety']['reignitelaststate'] = mode 
@@ -454,7 +454,7 @@ def WorkCycle(mode, grill_platform, adc_device, display_device, dist_device):
 				control['mode'] = 'Error'
 				control['updated'] = True
 				WriteControl(control)
-				SendNotifications("Grill_Error_01", control, settings)
+				SendNotifications("Grill_Error_01", control, settings, pelletdb)
 
 		# Check if target temperature has been achieved before utilizing Smoke Plus Mode
 		if((mode == 'Hold') and (AvgGT >= control['setpoints']['grill']) and (target_temp_achieved==False)):
@@ -716,7 +716,7 @@ def Monitor(grill_platform, adc_device, display_device, dist_device):
 			control['updated'] = True
 			control['status'] = 'monitor'
 			WriteControl(control)
-			SendNotifications("Grill_Error_01", control, settings)
+			SendNotifications("Grill_Error_01", control, settings, pelletdb)
 
 		time.sleep(0.05)
 
