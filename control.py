@@ -457,7 +457,7 @@ def WorkCycle(mode, grill_platform, adc_device, display_device, dist_device):
 				SendNotifications("Grill_Error_01", control, settings, pelletdb)
 
 		# Check if target temperature has been achieved before utilizing Smoke Plus Mode
-		if((mode == 'Hold') and (AvgGT >= control['setpoints']['grill']) and (target_temp_achieved==False)):
+		if((mode == 'Hold') and (AvgGT >= control['setpoints']['grill']) and (target_temp_achieved == False)):
 			target_temp_achieved = True
 
 		# If in Smoke Plus Mode, Cycle the Fan
@@ -476,6 +476,9 @@ def WorkCycle(mode, grill_platform, adc_device, display_device, dist_device):
 					event = '* Smoke Plus: Fan Toggled'
 					print(event)
 					WriteLog(event)
+
+		elif((current_output_status['fan'] == FANOFF) and (control['s_plus'] == False)):
+			grill_platform.FanOn()
 
 		# Write History after 3 seconds has passed
 		if (now - temptoggletime > 3):
@@ -1141,7 +1144,7 @@ def SendFirebaseNotification(notifyevent, control, settings, pelletdb):
           'priority': 'high'
         }
 		
-	response = requests.post("https://fcm.googleapis.com/fcm/send", headers = headers, data=json.dumps(body))
+	response = requests.post("https://fcm.googleapis.com/fcm/send", headers=headers, data=json.dumps(body))
 
 	if(response.status_code == 200):
 		WriteLog("Firebase Notification Success: " + titlemessage)
@@ -1211,41 +1214,45 @@ def SendNotifications(notifyevent, control, settings, pelletdb):
 # ******************************
 
 def CheckNotify(in_data, control, settings, pelletdb):
+	date = datetime.datetime.now()
+	time_now = date.strftime('%H:%M')
 
 	if (control['notify_req']['grill'] == True):
 		if (in_data['GrillTemp'] >= control['setpoints']['grill']):
-			#control = ReadControl()  # Read Modify Write
 			control['notify_req']['grill'] = False
 			WriteControl(control)
 			SendNotifications("Grill_Temp_Achieved", control, settings, pelletdb)
+			notify_event = "Grill Temp of " + str(control['setpoints']['grill']) + " Achieved at " + str(time_now)
+			WriteLog(notify_event)
 
 	if (control['notify_req']['probe1']):
 		if (in_data['Probe1Temp'] >= control['setpoints']['probe1']):
 			SendNotifications("Probe1_Temp_Achieved", control, settings, pelletdb)
-			#control = ReadControl()  # Read Modify Write
 			control['notify_req']['probe1'] = False
-			if(control['notify_data']['p1_shutdown'] == True)and((control['mode'] == 'Smoke')or(control['mode'] == 'Hold')or(control['mode'] == 'Startup')or(control['mode'] == 'Reignite')):
+			if(control['notify_data']['p1_shutdown'] == True) and ((control['mode'] == 'Smoke') or (control['mode'] == 'Hold') or (control['mode'] == 'Startup') or (control['mode'] == 'Reignite')):
 				control['mode'] = 'Shutdown'
 				control['updated'] = True
 				control['notify_data']['p1_shutdown'] = False
 			WriteControl(control)
+			notify_event = "Probe 1 Temp of " + str(control['setpoints']['probe1']) + " Achieved at " + str(time_now)
+			WriteLog(notify_event)
 
 	if (control['notify_req']['probe2']):
 		if (in_data['Probe2Temp'] >= control['setpoints']['probe2']):
 			SendNotifications("Probe2_Temp_Achieved", control, settings, pelletdb)
-			#control = ReadControl()  # Read Modify Write
 			control['notify_req']['probe2'] = False
-			if(control['notify_data']['p2_shutdown'] == True)and((control['mode'] == 'Smoke')or(control['mode'] == 'Hold')or(control['mode'] == 'Startup')or(control['mode'] == 'Reignite')):
+			if(control['notify_data']['p2_shutdown'] == True) and ((control['mode'] == 'Smoke') or (control['mode'] == 'Hold') or (control['mode'] == 'Startup') or (control['mode'] == 'Reignite')):
 				control['mode'] = 'Shutdown'
 				control['updated'] = True
 				control['notify_data']['p2_shutdown'] = False
 			WriteControl(control)
+			notify_event = "Probe 2 Temp of " + str(control['setpoints']['probe2']) + " Achieved at " + str(time_now)
+			WriteLog(notify_event)
 
 	if (control['notify_req']['timer']):
 		if (time.time() >= control['timer']['end']):
 			SendNotifications("Timer_Expired", control, settings, pelletdb)
-			#control = ReadControl()  # Read Modify Write
-			if(control['notify_data']['timer_shutdown'] == True)and((control['mode'] == 'Smoke')or(control['mode'] == 'Hold')or(control['mode'] == 'Startup')or(control['mode'] == 'Reignite')):
+			if(control['notify_data']['timer_shutdown'] == True) and ((control['mode'] == 'Smoke') or (control['mode'] == 'Hold') or (control['mode'] == 'Startup') or (control['mode'] == 'Reignite')):
 				control['mode'] = 'Shutdown'
 				control['updated'] = True
 			control['notify_req']['timer'] = False
@@ -1283,9 +1290,11 @@ buttonslevel = settings['globals']['buttonslevel']
 if triggerlevel == 'LOW':
 	AUGERON = 0
 	AUGEROFF = 1
+	FANOFF = 1
 else:
 	AUGERON = 1
 	AUGEROFF = 0
+	FANOFF = 0
 
 # Initialize Grill Platform Object
 grill_platform = GrillPlatform(outpins, inpins, triggerlevel)
