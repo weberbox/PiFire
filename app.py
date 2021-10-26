@@ -496,7 +496,7 @@ def pelletsspage(action=None):
 				pelletdb['current']['hopper_level'] = 100
 				now = str(datetime.datetime.now())
 				now = now[0:19] # Truncate the microseconds
-				pelletdb['current']['date_loaded'] = now 
+				pelletdb['current']['date_loaded'] = now
 				pelletdb['log'][now] = response['load_id']
 				WritePelletDB(pelletdb)
 				event['type'] = 'updated'
@@ -602,6 +602,19 @@ def pelletsspage(action=None):
 				WritePelletDB(pelletdb)
 				event['type'] = 'updated'
 				event['text'] = 'Successfully deleted ' + response['brand_name'] + ' ' + response['wood_type'] + ' profile in database.'
+
+	elif (request.method == 'POST' and action == 'deletelog'):
+		response = request.form
+		if('delLog' in response):
+			delLog = response['delLog']
+			if(delLog in pelletdb['log']):
+				pelletdb['log'].pop(delLog)
+				WritePelletDB(pelletdb)
+				event['type'] = 'updated'
+				event['text'] = 'Log successfully deleted.'
+			else:
+				event['type'] = 'error'
+				event['text'] = 'Item not found in pellet log.'
 
 	return render_template('pellets.html', alert=event, pelletdb=pelletdb, page_theme=settings['globals']['page_theme'], grill_name=settings['globals']['grill_name'])
 
@@ -2006,6 +2019,12 @@ def update_pellet_data(json_data):
 				for index in pelletdb['log']:  # Remove this profile ID for the logs
 					if(pelletdb['log'][index] == profile_id):
 						pelletdb['log'][index] = 'deleted'
+
+	if('deletelog' in data):
+		if('delLog' in data['deletelog']):
+			delLog = data['deletelog']['delLog']
+			if(delLog in pelletdb['log']):
+				pelletdb['log'].pop(delLog)
 
 	# Take all pelletdb changes and write them
 	WritePelletDB(pelletdb)

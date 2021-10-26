@@ -522,7 +522,7 @@ def WritePelletDB(pelletdb):
 	# *****************************************
 	# Write Pellet DataBase to JSON file
 	# *****************************************
-	json_data_string = json.dumps(pelletdb)
+	json_data_string = json.dumps(pelletdb, indent=2, sort_keys=True)
 	with open("pelletdb.json", 'w') as json_file:
 		json_file.write(json_data_string)
 
