@@ -8,6 +8,8 @@
 #
 # *****************************************
 
+from common import WriteLog
+
 class HopperLevel:
 
 	def __init__(self, empty=22, full=4):
