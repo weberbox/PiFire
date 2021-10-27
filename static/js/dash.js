@@ -151,6 +151,14 @@ $(document).ready(function(){
             $("#inactive_group").hide();
             $("#active_group").show();
             $("#error_btn").hide();
+        } else if (data.current_mode == 'Error') {
+            document.getElementById("stop_inactive_btn").className = "btn btn-danger border border-secondary";
+            $("#active_group").hide();
+            $("#smoke_inactive_btn").hide();
+            $("#hold_inactive_btn").hide();
+            $("#inactive_group").show();
+            $("#error_btn").show();
+            document.getElementById("error_btn").className = "btn btn-danger border border-secondary";
         };
 
         if ((data.current_mode == 'Smoke') || (data.current_mode == 'Hold')) {
@@ -279,7 +287,7 @@ $(document).ready(function(){
                     last_mode = data.current_mode;
 
                     // Update button selection 
-                    if (data.current_mode == "Stop") {
+                    if (data.current_mode == 'Stop') {
                         document.getElementById("stop_inactive_btn").className = "btn btn-danger border border-secondary";
                         $("#active_group").hide();
                         $("#splus_btn").hide();
@@ -343,7 +351,7 @@ $(document).ready(function(){
                         $("#stop_btn").show();
                         $("#error_btn").hide();
                         document.getElementById("shutdown_btn").className = "btn btn-danger border border-secondary";
-                    } else if (data.current_mode == "Error") {
+                    } else if (data.current_mode == 'Error') {
                         document.getElementById("stop_inactive_btn").className = "btn btn-danger border border-secondary";
                         $("#active_group").hide();
                         $("#splus_btn").hide();

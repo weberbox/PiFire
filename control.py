@@ -27,6 +27,7 @@ from common import *  # Common Library for WebUI and Control Program
 from pushbullet import Pushbullet # Pushbullet Import
 import pid as PID # Library for calculating PID setpoints
 import requests
+from temp_queue import TempQueue
 
 # Read Settings to Get Modules Configuration 
 settings = ReadSettings()
@@ -154,14 +155,15 @@ def WorkCycle(mode, grill_platform, adc_device, display_device, dist_device):
 		PIDControl = PID.PID(settings['cycle_data']['PB'],settings['cycle_data']['Ti'],settings['cycle_data']['Td'])
 		PIDControl.setTarget(control['setpoints']['grill'])	# Initialize with setpoint for grill
 		if(settings['globals']['debug_mode'] == True):
-			event = '* On Time = ' + str(OnTime) + ', OffTime = ' + str(OffTime) + ', CycleTime = ' + str(CycleTime) + ', CycleRatio = ' + str(CycleRatio)
+			event = '* On Time = ' + str(OnTime) + ', OffTime = ' + str(OffTime) + ', CycleTime = ' + \
+					str(CycleTime) + ', CycleRatio = ' + str(CycleRatio)
 			print(event)
 			WriteLog(event)
 
 	# Initialize all temperature variables
-	GrillTemp = 0
-	Probe1Temp = 0
-	Probe2Temp = 0
+	AvgGT = TempQueue()
+	AvgP1 = TempQueue()
+	AvgP2 = TempQueue()
 
 	# Check pellets level notification upon starting cycle
 	CheckNotifyPellets(control, settings, pelletdb)
@@ -174,40 +176,43 @@ def WorkCycle(mode, grill_platform, adc_device, display_device, dist_device):
 	probe1type = settings['probe_types']['probe1type']
 	probe2type = settings['probe_types']['probe2type']
 
-	adc_device.SetProfiles(settings['probe_settings']['probe_profiles'][grill1type], settings['probe_settings']['probe_profiles'][grill2type], settings['probe_settings']['probe_profiles'][probe1type], 
-		settings['probe_settings']['probe_profiles'][probe2type])
+	adc_device.SetProfiles(settings['probe_settings']['probe_profiles'][grill1type],
+						   settings['probe_settings']['probe_profiles'][grill2type],
+						   settings['probe_settings']['probe_profiles'][probe1type],
+						   settings['probe_settings']['probe_profiles'][probe2type])
 	
 	adc_data = {}
 	adc_data = adc_device.ReadAllPorts()
 
 	if(settings['globals']['four_probes'] == True):
 		if (settings['grill_probe_settings']['grill_probe_enabled'][2] == 1):
-			AvgGT = (adc_data['Grill1Temp'] + adc_data['Grill2Temp']) / 2
+			AvgGT.enqueue((adc_data['Grill1Temp'] + adc_data['Grill2Temp']) / 2 )
 		elif (settings['grill_probe_settings']['grill_probe_enabled'][1] == 1):
-			AvgGT = adc_data['Grill2Temp']
+			AvgGT.enqueue(adc_data['Grill2Temp'])
 		else:
-			AvgGT = adc_data['Grill1Temp']
+			AvgGT.enqueue(adc_data['Grill1Temp'])
 	else:
-		AvgGT = adc_data['Grill1Temp']
+		AvgGT.enqueue(adc_data['Grill1Temp'])
 
-	AvgP1 = adc_data['Probe1Temp']
-	AvgP2 = adc_data['Probe2Temp']
+	AvgP1.enqueue(adc_data['Probe1Temp'])
+	AvgP2.enqueue(adc_data['Probe2Temp'])
 
 	status = 'Active'
 
 	# Safety Controls
 	if ((mode == 'Startup') or (mode == 'Reignite')):
 		#control = ReadControl()  # Read Modify Write
-		control['safety']['startuptemp'] = int(max((GrillTemp*0.9), settings['safety']['minstartuptemp']))
+		control['safety']['startuptemp'] = int(max((AvgGT.average()*0.9), settings['safety']['minstartuptemp']))
 		control['safety']['startuptemp'] = int(min(control['safety']['startuptemp'], settings['safety']['maxstartuptemp']))
-		control['safety']['afterstarttemp'] = int(GrillTemp)
+		control['safety']['afterstarttemp'] = int(AvgGT.average())
 		WriteControl(control)
 	# Check if the temperature of the grill dropped below the startuptemperature 
 	elif ((mode == 'Hold') or (mode == 'Smoke')):
 		if (control['safety']['afterstarttemp'] < control['safety']['startuptemp']):
 			if(control['safety']['reigniteretries'] == 0):
 				status = 'Inactive'
-				event = 'ERROR: Grill temperature dropped below minimum startup temperature of ' + str(control['safety']['startuptemp']) + 'F! Shutting down to prevent firepot overload.'
+				event = 'ERROR: Grill temperature dropped below minimum startup temperature of ' + \
+						str(control['safety']['startuptemp']) + 'F! Shutting down to prevent firepot overload.'
 				WriteLog(event)
 				display_device.DisplayText('ERROR')
 				#control = ReadControl()  # Read Modify Write
@@ -220,7 +225,8 @@ def WorkCycle(mode, grill_platform, adc_device, display_device, dist_device):
 				control['safety']['reigniteretries'] -= 1
 				control['safety']['reignitelaststate'] = mode 
 				status = 'Inactive'
-				event = 'ERROR: Grill temperature dropped below minimum startup temperature of ' + str(control['safety']['startuptemp']) + 'F. Starting a re-ignite attempt, per user settings.'
+				event = 'ERROR: Grill temperature dropped below minimum startup temperature of ' + \
+						str(control['safety']['startuptemp']) + 'F. Starting a re-ignite attempt, per user settings.'
 				WriteLog(event)
 				display_device.DisplayText('Re-Ignite')
 				control['mode'] = 'Reignite'
@@ -274,7 +280,7 @@ def WorkCycle(mode, grill_platform, adc_device, display_device, dist_device):
 			CheckNotifyPellets(control, settings, pelletdb)
 			pelletschecktime = now
 
-		# Check if new mode has been requested 
+		# Check if new mode has been requested
 		if (control['updated'] == True):
 			status = 'Inactive'
 			break
@@ -318,14 +324,15 @@ def WorkCycle(mode, grill_platform, adc_device, display_device, dist_device):
 			augertoggletime = now
 			# Reset Cycle Time for HOLD Mode
 			if (mode == 'Hold'):
-				CycleRatio = PIDControl.update(AvgGT)
+				CycleRatio = PIDControl.update(AvgGT.average())
 				CycleRatio = max(CycleRatio, settings['cycle_data']['u_min'])
 				CycleRatio = min(CycleRatio, settings['cycle_data']['u_max'])
 				OnTime = settings['cycle_data']['HoldCycleTime'] * CycleRatio
 				OffTime = settings['cycle_data']['HoldCycleTime'] * (1 - CycleRatio)
 				CycleTime = OnTime + OffTime
 				if(settings['globals']['debug_mode'] == True):
-					event = '* On Time = ' + str(OnTime) + ', OffTime = ' + str(OffTime) + ', CycleTime = ' + str(CycleTime) + ', CycleRatio = ' + str(CycleRatio)
+					event = '* On Time = ' + str(OnTime) + ', OffTime = ' + str(OffTime) + ', CycleTime = ' + \
+							str(CycleTime) + ', CycleRatio = ' + str(CycleRatio)
 					print(event)
 					WriteLog(event)
 			if(settings['globals']['debug_mode'] == True):
@@ -348,14 +355,18 @@ def WorkCycle(mode, grill_platform, adc_device, display_device, dist_device):
 			#control = ReadControl()  # Read Modify Write
 			control['probe_profile_update'] = False
 			WriteControl(control)
+
 			# Get new probe profiles
 			grill1type = settings['probe_types']['grill1type']
 			grill2type = settings['probe_types']['grill2type']
 			probe1type = settings['probe_types']['probe1type']
 			probe2type = settings['probe_types']['probe2type']
+
 			# Add new probe profiles to ADC Object
-			adc_device.SetProfiles(settings['probe_settings']['probe_profiles'][grill1type], settings['probe_settings']['probe_profiles'][grill2type], settings['probe_settings']['probe_profiles'][probe1type], 
-				settings['probe_settings']['probe_profiles'][probe2type])
+			adc_device.SetProfiles(settings['probe_settings']['probe_profiles'][grill1type],
+								   settings['probe_settings']['probe_profiles'][grill2type],
+								   settings['probe_settings']['probe_profiles'][probe1type],
+								   settings['probe_settings']['probe_profiles'][probe2type])
 
 		# Get temperatures from all probes
 		adc_data = {}
@@ -363,46 +374,36 @@ def WorkCycle(mode, grill_platform, adc_device, display_device, dist_device):
 
 		# Test temperature data returned for errors (+/- 20% Temp Variance), and average the data since last reading
 		if(settings['globals']['four_probes'] == True):
-			if (settings['grill_probe_settings']['grill_probe_enabled'][2] == 1):
-				if(adc_data['Grill1Temp'] != 0 and adc_data['Grill2Temp'] !=0):
-					if((adc_data['Grill1Temp'] >= AvgGT * 0.8) and (adc_data['Grill1Temp'] <= AvgGT * 1.2)):
-						if((adc_data['Grill2Temp'] >= AvgGT * 0.8) and (adc_data['Grill2Temp'] <= AvgGT * 1.2)):
-							AvgGT = (adc_data['Grill1Temp'] + adc_data['Grill2Temp']) / 2
-			elif (settings['grill_probe_settings']['grill_probe_enabled'][1] == 1):
-				if((adc_data['Grill2Temp'] != 0) and (adc_data['Grill2Temp'] >= AvgGT * 0.8) and (adc_data['Grill2Temp'] <= AvgGT * 1.2)):
-					AvgGT = (adc_data['Grill2Temp'] + AvgGT) / 2
+			if(settings['grill_probe_settings']['grill_probe_enabled'][2] == 1):
+				AvgGT.enqueue((adc_data['Grill1Temp'] + adc_data['Grill2Temp']) / 2 )
+			elif(settings['grill_probe_settings']['grill_probe_enabled'][1] == 1):
+				AvgGT.enqueue(adc_data['Grill2Temp'])
 			else:
-				if((adc_data['Grill1Temp'] != 0) and (adc_data['Grill1Temp'] >= AvgGT * 0.8) and (adc_data['Grill1Temp'] <= AvgGT * 1.2)):
-					AvgGT = (adc_data['Grill1Temp'] + AvgGT) / 2
+				AvgGT.enqueue(adc_data['Grill1Temp'])
 		else:
-			if((adc_data['Grill1Temp'] != 0) and (adc_data['Grill1Temp'] >= AvgGT * 0.8) and (adc_data['Grill1Temp'] <= AvgGT * 1.2)):
-				AvgGT = (adc_data['Grill1Temp'] + AvgGT) / 2
+			AvgGT.enqueue(adc_data['Grill1Temp'])
 
-		if((adc_data['Probe1Temp'] != 0) and (adc_data['Probe1Temp'] >= AvgP1 * 0.8) and (adc_data['Probe1Temp'] <= AvgP1 * 1.2)):
-			AvgP1 = (adc_data['Probe1Temp'] + AvgP1) / 2
-		elif(AvgP1 == 0):
-			AvgP1 = adc_data['Probe1Temp']
-		elif(adc_data['Probe1Temp'] == 0):
-			AvgP1 = 0
-
-		if((adc_data['Probe2Temp'] != 0) and (adc_data['Probe2Temp'] >= AvgP2 * 0.8) and (adc_data['Probe2Temp'] <= AvgP2 * 1.2)):
-			AvgP2 = (adc_data['Probe2Temp'] + AvgP2) / 2
-		elif(AvgP2 == 0):
-			AvgP2 = adc_data['Probe2Temp']
-		elif(adc_data['Probe2Temp'] == 0):
-			AvgP2 = 0
+		AvgP1.enqueue(adc_data['Probe1Temp'])
+		AvgP2.enqueue(adc_data['Probe2Temp'])
 
 		in_data = {}
-		in_data['GrillTemp'] = int(AvgGT)
+		in_data['GrillTemp'] = int(AvgGT.average())
 		in_data['GrillSetPoint'] = control['setpoints']['grill']
-		in_data['Probe1Temp'] = int(AvgP1)
+		in_data['Probe1Temp'] = int(AvgP1.average())
 		in_data['Probe1SetPoint'] = control['setpoints']['probe1']
-		in_data['Probe2Temp'] = int(AvgP2)
+		in_data['Probe2Temp'] = int(AvgP2.average())
 		in_data['Probe2SetPoint'] = control['setpoints']['probe2']
-		if (settings['grill_probe_settings']['grill_probe_enabled'][0] == 1):
-			in_data['GrillTr'] = adc_data['Grill1Tr']  # For Temp Resistance Tuning
+
+		if(settings['globals']['four_probes'] == True):
+			if(settings['grill_probe_settings']['grill_probe_enabled'][2] == 1):
+				in_data['GrillTr'] = 0 # This is an average of two probes so it should be disabled for editing.
+			elif(settings['grill_probe_settings']['grill_probe_enabled'][1] == 1):
+				in_data['GrillTr'] = adc_data['Grill2Tr']  # For Temp Resistance Tuning
+			else:
+				in_data['GrillTr'] = adc_data['Grill1Tr']  # For Temp Resistance Tuning
 		else:
-			in_data['GrillTr'] = adc_data['Grill2Tr']  # For Temp Resistance Tuning
+			in_data['GrillTr'] = adc_data['Grill1Tr']  # For Temp Resistance Tuning
+
 		in_data['Probe1Tr'] = adc_data['Probe1Tr']  # For Temp Resistance Tuning
 		in_data['Probe2Tr'] = adc_data['Probe2Tr']  # For Temp Resistance Tuning
 
@@ -420,12 +421,13 @@ def WorkCycle(mode, grill_platform, adc_device, display_device, dist_device):
 
 		# Safety Controls
 		if ((mode == 'Startup') or (mode == 'Reignite')):
-			control['safety']['afterstarttemp'] = int(AvgGT)
+			control['safety']['afterstarttemp'] = int(AvgGT.average())
 		elif ((mode == 'Hold') or (mode == 'Smoke')):
-			if (AvgGT < control['safety']['startuptemp']):
+			if (AvgGT.average() < control['safety']['startuptemp']):
 				if(control['safety']['reigniteretries'] == 0):
 					status = 'Inactive'
-					event = 'ERROR: Grill temperature dropped below minimum startup temperature of ' + str(control['safety']['startuptemp']) + 'F! Shutting down to prevent firepot overload.'
+					event = 'ERROR: Grill temperature dropped below minimum startup temperature of ' + \
+							str(control['safety']['startuptemp']) + 'F! Shutting down to prevent firepot overload.'
 					WriteLog(event)
 					display_device.DisplayText('ERROR')
 					#control = ReadControl()  # Read Modify Write
@@ -437,7 +439,8 @@ def WorkCycle(mode, grill_platform, adc_device, display_device, dist_device):
 					control['safety']['reigniteretries'] -= 1
 					control['safety']['reignitelaststate'] = mode 
 					status = 'Inactive'
-					event = 'ERROR: Grill temperature dropped below minimum startup temperature of ' + str(control['safety']['startuptemp']) + 'F. Starting a re-ignite attempt, per user settings.'
+					event = 'ERROR: Grill temperature dropped below minimum startup temperature of ' + \
+							str(control['safety']['startuptemp']) + 'F. Starting a re-ignite attempt, per user settings.'
 					WriteLog(event)
 					display_device.DisplayText('Re-Ignite')
 					#control = ReadControl()  # Read Modify Write
@@ -445,7 +448,7 @@ def WorkCycle(mode, grill_platform, adc_device, display_device, dist_device):
 					control['updated'] = True
 					WriteControl(control)
 
-			if (AvgGT > settings['safety']['maxtemp']):
+			if (AvgGT.average() > settings['safety']['maxtemp']):
 				status = 'Inactive'
 				event = 'ERROR: Grill exceed maximum temperature limit of ' + str(settings['safety']['maxtemp']) + 'F! Shutting down.'
 				WriteLog(event)
@@ -457,16 +460,16 @@ def WorkCycle(mode, grill_platform, adc_device, display_device, dist_device):
 				SendNotifications("Grill_Error_01", control, settings, pelletdb)
 
 		# Check if target temperature has been achieved before utilizing Smoke Plus Mode
-		if((mode == 'Hold') and (AvgGT >= control['setpoints']['grill']) and (target_temp_achieved == False)):
+		if((mode == 'Hold') and (AvgGT.average() >= control['setpoints']['grill']) and (target_temp_achieved == False)):
 			target_temp_achieved = True
 
 		# If in Smoke Plus Mode, Cycle the Fan
 		if(((mode == 'Smoke') or ((mode == 'Hold') and (target_temp_achieved))) and (control['s_plus'] == True)):
 			# If Temperature is > settings['smoke_plus']['max_temp'] then turn on fan
-			if(AvgGT > settings['smoke_plus']['max_temp']):
+			if(AvgGT.average() > settings['smoke_plus']['max_temp']):
 				grill_platform.FanOn()
 			# elif Temperature is < settings['smoke_plus']['min_temp'] then turn on fan
-			elif(AvgGT < settings['smoke_plus']['min_temp']):
+			elif(AvgGT.average() < settings['smoke_plus']['min_temp']):
 				grill_platform.FanOn()
 			# elif now - sp_cycletoggletime > settings['smoke_plus']['cycle'] / 2 then toggle fan, reset sp_cycletoggletime = now
 			elif((now - sp_cycletoggletime) > (settings['smoke_plus']['cycle']*0.5)):
@@ -517,7 +520,7 @@ def WorkCycle(mode, grill_platform, adc_device, display_device, dist_device):
 			WriteLog(event)
 	if ((mode == 'Startup') or (mode == 'Reignite')):
 		#control = ReadControl()  # Read Modify Write
-		control['safety']['afterstarttemp'] = int(AvgGT)
+		control['safety']['afterstarttemp'] = int(AvgGT.average())
 		WriteControl(control)
 	event = mode + ' mode ended.'
 	WriteLog(event)
@@ -541,10 +544,10 @@ def Monitor(grill_platform, adc_device, display_device, dist_device):
 	grill_platform.FanOff()
 	grill_platform.PowerOff()
 
-	# Initialize all temperature variables
-	GrillTemp = 0
-	Probe1Temp = 0
-	Probe2Temp = 0
+	# Initialize all temperature objects
+	AvgGT = TempQueue()
+	AvgP1 = TempQueue()
+	AvgP2 = TempQueue()
 
 	# Setup Cycle Parameters
 	settings = ReadSettings()
@@ -561,24 +564,26 @@ def Monitor(grill_platform, adc_device, display_device, dist_device):
 	probe1type = settings['probe_types']['probe1type']
 	probe2type = settings['probe_types']['probe2type']
 
-	adc_device.SetProfiles(settings['probe_settings']['probe_profiles'][grill1type], settings['probe_settings']['probe_profiles'][grill2type], settings['probe_settings']['probe_profiles'][probe1type], 
-		settings['probe_settings']['probe_profiles'][probe2type])
+	adc_device.SetProfiles(settings['probe_settings']['probe_profiles'][grill1type],
+						   settings['probe_settings']['probe_profiles'][grill2type],
+						   settings['probe_settings']['probe_profiles'][probe1type],
+						   settings['probe_settings']['probe_profiles'][probe2type])
 
 	adc_data = {}
 	adc_data = adc_device.ReadAllPorts()
 
 	if(settings['globals']['four_probes'] == True):
 		if (settings['grill_probe_settings']['grill_probe_enabled'][2] == 1):
-			AvgGT = (adc_data['Grill1Temp'] + adc_data['Grill2Temp']) / 2
+			AvgGT.enqueue((adc_data['Grill1Temp'] + adc_data['Grill2Temp']) / 2 )
 		elif (settings['grill_probe_settings']['grill_probe_enabled'][1] == 1):
-			AvgGT = adc_data['Grill2Temp']
+			AvgGT.enqueue(adc_data['Grill2Temp'])
 		else:
-			AvgGT = adc_data['Grill1Temp']
+			AvgGT.enqueue(adc_data['Grill1Temp'])
 	else:
-		AvgGT = adc_data['Grill1Temp']
+		AvgGT.enqueue(adc_data['Grill1Temp'])
 
-	AvgP1 = adc_data['Probe1Temp']
-	AvgP2 = adc_data['Probe2Temp']
+	AvgP1.enqueue(adc_data['Probe1Temp'])
+	AvgP2.enqueue(adc_data['Probe2Temp'])
 
 	now = time.time()
 
@@ -653,42 +658,54 @@ def Monitor(grill_platform, adc_device, display_device, dist_device):
 			#control = ReadControl()  # Read Modify Write
 			control['probe_profile_update'] = False
 			WriteControl(control)
+
 			# Get new probe profiles
 			grill1type = settings['probe_types']['grill1type']
 			grill2type = settings['probe_types']['grill2type']
 			probe1type = settings['probe_types']['probe1type']
 			probe2type = settings['probe_types']['probe2type']
+
 			# Add new probe profiles to ADC Object
-			adc_device.SetProfiles(settings['probe_settings']['probe_profiles'][grill1type], settings['probe_settings']['probe_profiles'][grill2type], settings['probe_settings']['probe_profiles'][probe1type], 
-				settings['probe_settings']['probe_profiles'][probe2type])
+			adc_device.SetProfiles(settings['probe_settings']['probe_profiles'][grill1type],
+								   settings['probe_settings']['probe_profiles'][grill2type],
+								   settings['probe_settings']['probe_profiles'][probe1type],
+								   settings['probe_settings']['probe_profiles'][probe2type])
 
 		adc_data = {}
 		adc_data = adc_device.ReadAllPorts()
 
+		# Test temperature data returned for errors (+/- 20% Temp Variance), and average the data since last reading
 		if(settings['globals']['four_probes'] == True):
 			if (settings['grill_probe_settings']['grill_probe_enabled'][2] == 1):
-				AvgGT = ((adc_data['Grill1Temp'] + adc_data['Grill2Temp']) / 2 + AvgGT) / 2
+				AvgGT.enqueue((adc_data['Grill1Temp'] + adc_data['Grill2Temp']) / 2 )
 			elif (settings['grill_probe_settings']['grill_probe_enabled'][1] == 1):
-				AvgGT = (adc_data['Grill2Temp'] + AvgGT) / 2
+				AvgGT.enqueue(adc_data['Grill2Temp'])
 			else:
-				AvgGT = (adc_data['Grill1Temp'] + AvgGT) / 2
+				AvgGT.enqueue(adc_data['Grill1Temp'])
 		else:
-			AvgGT = (adc_data['Grill1Temp'] + AvgGT) / 2
+			AvgGT.enqueue(adc_data['Grill1Temp'])
 
-		AvgP1 = (adc_data['Probe1Temp'] + AvgP1) / 2
-		AvgP2 = (adc_data['Probe2Temp'] + AvgP2) / 2
+		AvgP1.enqueue(adc_data['Probe1Temp'])
+		AvgP2.enqueue(adc_data['Probe2Temp'])
 
 		in_data = {}
-		in_data['GrillTemp'] = int(AvgGT)
+		in_data['GrillTemp'] = int(AvgGT.average())
 		in_data['GrillSetPoint'] = control['setpoints']['grill']
-		in_data['Probe1Temp'] = int(AvgP1)
+		in_data['Probe1Temp'] = int(AvgP1.average())
 		in_data['Probe1SetPoint'] = control['setpoints']['probe1']
-		in_data['Probe2Temp'] = int(AvgP2)
+		in_data['Probe2Temp'] = int(AvgP2.average())
 		in_data['Probe2SetPoint'] = control['setpoints']['probe2']
-		if (settings['grill_probe_settings']['grill_probe_enabled'][0] == 1):
-			in_data['GrillTr'] = adc_data['Grill1Tr']
+
+		if(settings['globals']['four_probes'] == True):
+			if(settings['grill_probe_settings']['grill_probe_enabled'][2] == 1):
+				in_data['GrillTr'] = 0 # This is an average of two probes so it should be disabled for editing.
+			elif(settings['grill_probe_settings']['grill_probe_enabled'][1] == 1):
+				in_data['GrillTr'] = adc_data['Grill2Tr']  # For Temp Resistance Tuning
+			else:
+				in_data['GrillTr'] = adc_data['Grill1Tr']  # For Temp Resistance Tuning
 		else:
-			in_data['GrillTr'] = adc_data['Grill2Tr']
+			in_data['GrillTr'] = adc_data['Grill1Tr']  # For Temp Resistance Tuning
+
 		in_data['Probe1Tr'] = adc_data['Probe1Tr']
 		in_data['Probe2Tr'] = adc_data['Probe2Tr']
 		
@@ -709,7 +726,7 @@ def Monitor(grill_platform, adc_device, display_device, dist_device):
 			WriteHistory(in_data)
 
 		# Safety Control Section
-		if (AvgGT > settings['safety']['maxtemp']):
+		if (AvgGT.average() > settings['safety']['maxtemp']):
 			status = 'Inactive'
 			event = 'ERROR: Grill exceed maximum temperature limit of ' + str(settings['safety']['maxtemp']) + 'F! Shutting down.'
 			WriteLog(event)
@@ -750,9 +767,9 @@ def Manual_Mode(grill_platform, adc_device, display_device, dist_device):
 	grill_platform.PowerOff()
 
 	# Initialize all temperature variables
-	GrillTemp = 0
-	Probe1Temp = 0
-	Probe2Temp = 0
+	AvgGT = TempQueue()
+	AvgP1 = TempQueue()
+	AvgP2 = TempQueue()
 
 	# Collect Initial Temperature Information
 	# Get Probe Types From Settings
@@ -761,24 +778,26 @@ def Manual_Mode(grill_platform, adc_device, display_device, dist_device):
 	probe1type = settings['probe_types']['probe1type']
 	probe2type = settings['probe_types']['probe2type']
 
-	adc_device.SetProfiles(settings['probe_settings']['probe_profiles'][grill1type], settings['probe_settings']['probe_profiles'][grill2type], settings['probe_settings']['probe_profiles'][probe1type], 
-		settings['probe_settings']['probe_profiles'][probe2type])
+	adc_device.SetProfiles(settings['probe_settings']['probe_profiles'][grill1type],
+						   settings['probe_settings']['probe_profiles'][grill2type],
+						   settings['probe_settings']['probe_profiles'][probe1type],
+						   settings['probe_settings']['probe_profiles'][probe2type])
 
 	adc_data = {}
 	adc_data = adc_device.ReadAllPorts()
 
 	if(settings['globals']['four_probes'] == True):
 		if (settings['grill_probe_settings']['grill_probe_enabled'][2] == 1):
-			AvgGT = (adc_data['Grill1Temp'] + adc_data['Grill2Temp']) / 2
+			AvgGT.enqueue((adc_data['Grill1Temp'] + adc_data['Grill2Temp']) / 2 )
 		elif (settings['grill_probe_settings']['grill_probe_enabled'][1] == 1):
-			AvgGT = adc_data['Grill2Temp']
+			AvgGT.enqueue(adc_data['Grill2Temp'])
 		else:
-			AvgGT = adc_data['Grill1Temp']
+			AvgGT.enqueue(adc_data['Grill1Temp'])
 	else:
-		AvgGT = adc_data['Grill1Temp']
+		AvgGT.enqueue(adc_data['Grill1Temp'])
 
-	AvgP1 = adc_data['Probe1Temp']
-	AvgP2 = adc_data['Probe2Temp']
+	AvgP1.enqueue(adc_data['Probe1Temp'])
+	AvgP2.enqueue(adc_data['Probe2Temp'])
 
 	now = time.time()
 
@@ -854,44 +873,56 @@ def Manual_Mode(grill_platform, adc_device, display_device, dist_device):
 			settings = ReadSettings()
 			control['probe_profile_update'] = False
 			WriteControl(control)
+
 			# Get new probe profiles
 			grill1type = settings['probe_types']['grill1type']
 			grill2type = settings['probe_types']['grill2type']
 			probe1type = settings['probe_types']['probe1type']
 			probe2type = settings['probe_types']['probe2type']
+
 			# Add new probe profiles to ADC Object
-			adc_device.SetProfiles(settings['probe_settings']['probe_profiles'][grill1type], settings['probe_settings']['probe_profiles'][grill2type], settings['probe_settings']['probe_profiles'][probe1type], 
-				settings['probe_settings']['probe_profiles'][probe2type])
+			adc_device.SetProfiles(settings['probe_settings']['probe_profiles'][grill1type],
+								   settings['probe_settings']['probe_profiles'][grill2type],
+								   settings['probe_settings']['probe_profiles'][probe1type],
+								   settings['probe_settings']['probe_profiles'][probe2type])
 
 		adc_data = {}
 		adc_data = adc_device.ReadAllPorts()
 
+		# Test temperature data returned for errors (+/- 20% Temp Variance), and average the data since last reading
 		if(settings['globals']['four_probes'] == True):
 			if (settings['grill_probe_settings']['grill_probe_enabled'][2] == 1):
-				AvgGT = ((adc_data['Grill1Temp'] + adc_data['Grill2Temp']) / 2 + AvgGT) / 2
+				AvgGT.enqueue((adc_data['Grill1Temp'] + adc_data['Grill2Temp']) / 2 )
 			elif (settings['grill_probe_settings']['grill_probe_enabled'][1] == 1):
-				AvgGT = (adc_data['Grill2Temp'] + AvgGT) / 2
+				AvgGT.enqueue(adc_data['Grill2Temp'])
 			else:
-				AvgGT = (adc_data['Grill1Temp'] + AvgGT) / 2
+				AvgGT.enqueue(adc_data['Grill1Temp'])
 		else:
-			AvgGT = (adc_data['Grill1Temp'] + AvgGT) / 2
+			AvgGT.enqueue(adc_data['Grill1Temp'])
 
-		AvgP1 = (adc_data['Probe1Temp'] + AvgP1) / 2
-		AvgP2 = (adc_data['Probe2Temp'] + AvgP2) / 2
+		AvgP1.enqueue(adc_data['Probe1Temp'])
+		AvgP2.enqueue(adc_data['Probe2Temp'])
 
 		in_data = {}
-		in_data['GrillTemp'] = int(AvgGT)
+		in_data['GrillTemp'] = int(AvgGT.average())
 		in_data['GrillSetPoint'] = control['setpoints']['grill']
-		in_data['Probe1Temp'] = int(AvgP1)
+		in_data['Probe1Temp'] = int(AvgP1.average())
 		in_data['Probe1SetPoint'] = control['setpoints']['probe1']
-		in_data['Probe2Temp'] = int(AvgP2)
+		in_data['Probe2Temp'] = int(AvgP2.average())
 		in_data['Probe2SetPoint'] = control['setpoints']['probe2']
-		if (settings['grill_probe_settings']['grill_probe_enabled'][0] == 1):
-			in_data['GrillTr'] = adc_data['Grill1Tr']
+
+		if(settings['globals']['four_probes'] == True):
+			if(settings['grill_probe_settings']['grill_probe_enabled'][2] == 1):
+				in_data['GrillTr'] = 0 # This is an average of two probes so it should be disabled for editing.
+			elif(settings['grill_probe_settings']['grill_probe_enabled'][1] == 1):
+				in_data['GrillTr'] = adc_data['Grill2Tr']  # For Temp Resistance Tuning
+			else:
+				in_data['GrillTr'] = adc_data['Grill1Tr']  # For Temp Resistance Tuning
 		else:
-			in_data['GrillTr'] = adc_data['Grill2Tr']
-		in_data['Probe1Tr'] = adc_data['Probe1Tr']
-		in_data['Probe2Tr'] = adc_data['Probe2Tr']
+			in_data['GrillTr'] = adc_data['Grill1Tr']  # For Temp Resistance Tuning
+
+		in_data['Probe1Tr'] = adc_data['Probe1Tr'] # For Temp Resistance Tuning
+		in_data['Probe2Tr'] = adc_data['Probe2Tr'] # For Temp Resistance Tuning
 
 		# Update Display Device after 1 second has passed 
 		if(now - displaytoggletime > 1):
@@ -1124,27 +1155,24 @@ def SendFirebaseNotification(notifyevent, control, settings, pelletdb):
 		sound = 'default'
 		channel = 'default'
 
-	serverToken = settings['firebase']['ServerKey']
-	topic = settings['firebase']['topic']
+	server_url = settings['firebase']['ServerUrl']
+	device_uuid = settings['firebase']['uuid']
 
 	headers = {
-        'Content-Type': 'application/json',
-        'Authorization': 'key=' + serverToken,
-      }
+		'Content-Type': 'application/json',
+	}
 
 	body = {
-		'notification': {
-			'title': titlemessage,
-            'body': bodymessage,
-			'sound' : sound,
-			'android_channel_id' : channel
-            },
-          'to':
-              '/topics/' + topic,
-          'priority': 'high'
-        }
-		
-	response = requests.post("https://fcm.googleapis.com/fcm/send", headers=headers, data=json.dumps(body))
+		'uuid': device_uuid,
+		'title': titlemessage,
+		'message': bodymessage,
+		'sound': sound,
+		'channel': channel,
+		'priority': 'high',
+		'ttl': 3600
+	}
+
+	response = requests.post(server_url, headers=headers, data=json.dumps(body))
 
 	if(response.status_code == 200):
 		WriteLog("Firebase Notification Success: " + titlemessage)
@@ -1160,8 +1188,6 @@ def SendFirebaseNotification(notifyevent, control, settings, pelletdb):
 # ******************************
 
 def SendIFTTTNotification(notifyevent, control, settings, pelletdb):
-
-	now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
 
 	if "Grill_Temp_Achieved" in notifyevent:
 		query_args = { "value1" : str(control['setpoints']['grill']) }
@@ -1206,7 +1232,7 @@ def SendNotifications(notifyevent, control, settings, pelletdb):
 		SendPushBulletNotification(notifyevent, control, settings, pelletdb)
 	if(settings['pushover']['APIKey'] != '' and settings['pushover']['UserKeys'] != '' and settings['pushover']['enabled'] == True):
 		SendPushoverNotification(notifyevent, control, settings, pelletdb)
-	if(settings['firebase']['ServerKey'] != '' and settings['firebase']['enabled'] == True):
+	if(settings['firebase']['ServerUrl'] != '' and settings['firebase']['enabled'] == True):
 		SendFirebaseNotification(notifyevent, control, settings, pelletdb)
 
 # ******************************
@@ -1214,15 +1240,13 @@ def SendNotifications(notifyevent, control, settings, pelletdb):
 # ******************************
 
 def CheckNotify(in_data, control, settings, pelletdb):
-	date = datetime.datetime.now()
-	time_now = date.strftime('%H:%M')
 
 	if (control['notify_req']['grill'] == True):
 		if (in_data['GrillTemp'] >= control['setpoints']['grill']):
 			control['notify_req']['grill'] = False
 			WriteControl(control)
 			SendNotifications("Grill_Temp_Achieved", control, settings, pelletdb)
-			notify_event = "Grill Temp of " + str(control['setpoints']['grill']) + " Achieved at " + str(time_now)
+			notify_event = "Grill Temp of " + str(control['setpoints']['grill']) + settings['globals']['units'] + " Achieved"
 			WriteLog(notify_event)
 
 	if (control['notify_req']['probe1']):
@@ -1234,7 +1258,7 @@ def CheckNotify(in_data, control, settings, pelletdb):
 				control['updated'] = True
 				control['notify_data']['p1_shutdown'] = False
 			WriteControl(control)
-			notify_event = "Probe 1 Temp of " + str(control['setpoints']['probe1']) + " Achieved at " + str(time_now)
+			notify_event = "Probe 1 Temp of " + str(control['setpoints']['probe1']) + settings['globals']['units'] + " Achieved"
 			WriteLog(notify_event)
 
 	if (control['notify_req']['probe2']):
@@ -1246,7 +1270,7 @@ def CheckNotify(in_data, control, settings, pelletdb):
 				control['updated'] = True
 				control['notify_data']['p2_shutdown'] = False
 			WriteControl(control)
-			notify_event = "Probe 2 Temp of " + str(control['setpoints']['probe2']) + " Achieved at " + str(time_now)
+			notify_event = "Probe 2 Temp of " + str(control['setpoints']['probe2']) + settings['globals']['units'] + " Achieved"
 			WriteLog(notify_event)
 
 	if (control['notify_req']['timer']):
@@ -1319,8 +1343,10 @@ probe1type = settings['probe_types']['probe1type']
 probe2type = settings['probe_types']['probe2type']
 
 # Start ADC object and set profiles
-adc_device = ReadADC(settings['probe_settings']['probe_profiles'][grill1type], settings['probe_settings']['probe_profiles'][grill2type], settings['probe_settings']['probe_profiles'][probe1type], 
-	settings['probe_settings']['probe_profiles'][probe2type])
+adc_device = ReadADC(settings['probe_settings']['probe_profiles'][grill1type],
+					 settings['probe_settings']['probe_profiles'][grill2type],
+					 settings['probe_settings']['probe_profiles'][probe1type],
+					 settings['probe_settings']['probe_profiles'][probe2type])
 
 pelletdb = ReadPelletDB()
 

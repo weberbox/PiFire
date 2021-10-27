@@ -6,7 +6,7 @@
 #
 # Description: This library supports getting the hopper level from the distance sensor
 #
-# Install Dependancies: 
+# Install Dependencies:
 #
 #    sudo apt install python3-smbus
 #    sudo pip3 install git+https://github.com/pimoroni/VL53L0X-python.git

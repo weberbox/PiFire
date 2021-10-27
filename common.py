@@ -18,6 +18,9 @@ import os
 import json
 import math
 import redis
+import uuid
+import random
+from uuid import getnode
 
 # *****************************************
 # Functions
@@ -29,7 +32,7 @@ def DefaultSettings():
 	settings = {}
 
 	settings['versions'] = { 
-		'android' : 4,
+		'android' : 5,
 		'server' : 1
 	}
 
@@ -76,8 +79,8 @@ def DefaultSettings():
 
 	settings['firebase'] = {
 		'enabled': False,
-		'ServerKey': '', # Server Key for Firebase notifications
-		'topic' : 'GrillAlerts' # Topic the device will subscribe to
+		'uuid' : generateUUID(),
+		'ServerUrl' : ''
 	}
 
 	settings['probe_types'] = {
@@ -224,7 +227,7 @@ def DefaultControl():
 	control['manual'] = {
 		'change' : False,
 		'output' : '',
-		'state' : '',
+		'state' : ''
 	}
 
 	control['manual']['current'] = {
@@ -382,6 +385,14 @@ def GrillProbes():
 	}
 	
 	return grill_probes
+
+def generateUUID():
+
+	node = uuid.getnode()
+	rand_int = random.randint(100, 200)
+	generated_uuid = uuid.uuid1(node + rand_int)
+
+	return str(generated_uuid)
 
 def isRaspberryPi():
 	try:

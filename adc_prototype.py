@@ -67,6 +67,11 @@ class ReadADC:
 		elif (adc_value[0] < 1) and (self.adc_data['Grill1Temp'] > 50):
 			self.adc_data['Grill1Temp'] -= 1 # reduce temperature by 1 degree
 
+		if (adc_value[3] > 7) and (self.adc_data['Grill2Temp'] < 425):
+			self.adc_data['Grill2Temp'] += 1 # raise temperature by 1 degree
+		elif (adc_value[3] < 1) and (self.adc_data['Grill2Temp'] > 50):
+			self.adc_data['Grill2Temp'] -= 1 # reduce temperature by 1 degree
+
 		if (adc_value[1] > 7) and (self.adc_data['Probe1Temp'] < 200):
 			self.adc_data['Probe1Temp'] += 1 # raise temperature by 1 degree
 		elif (adc_value[1] < 1) and (self.adc_data['Probe1Temp'] > 32):
@@ -77,15 +82,11 @@ class ReadADC:
 		elif (adc_value[2] < 1) and (self.adc_data['Probe2Temp'] > 32):
 			self.adc_data['Probe2Temp'] -= 1 # reduce temperature by 1 degree
 
-		if (adc_value[3] > 7) and (self.adc_data['Grill2Temp'] < 425):
-			self.adc_data['Grill2Temp'] += 1 # raise temperature by 1 degree
-		elif (adc_value[3] < 1) and (self.adc_data['Grill2Temp'] > 50):
-			self.adc_data['Grill2Temp'] -= 1 # reduce temperature by 1 degree
 
 		# Thermistor data is not useful in prototype mode
 		self.adc_data['Grill1Tr'] = self.adctotemp(self.adc_data['Grill1Temp'], self.grill_probe1_profile) # Resistance of Grill 1 Thermistor
+		self.adc_data['Grill2Tr'] = self.adctotemp(self.adc_data['Grill2Temp'], self.grill_probe2_profile) # Resistance of Grill 2 Thermistor
 		self.adc_data['Probe1Tr'] = self.adctotemp(self.adc_data['Probe1Temp'], self.probe_01_profile) # Resistance of Probe Thermistor
 		self.adc_data['Probe2Tr'] = self.adctotemp(self.adc_data['Probe2Temp'], self.probe_02_profile) # Resistance of Probe Thermistor
-		self.adc_data['Grill2Tr'] = self.adctotemp(self.adc_data['Grill2Temp'], self.grill_probe2_profile) # Resistance of Grill 2 Thermistor
 
 		return (self.adc_data)

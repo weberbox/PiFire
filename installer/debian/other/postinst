@@ -34,6 +34,7 @@ sudo -H pip3 install flask_qrcode
 sudo -H pip3 install flask-socketio
 sudo -H pip3 install eventlet==0.30.2
 sudo -H pip3 install redis
+sudo -H pip3 install uuid
 
 ### Setup nginx to proxy to gunicorn
 
@@ -71,6 +72,7 @@ fi
 service supervisor restart
 
 ## Update settings server version
+cd /usr/local/bin/pifire || exit 1 # Change dir to where the settings.py application is (and common.py)
 python3 /usr/local/bin/pifire/settings.py -v @VERSION@
 
 echo " " | sudo tee -a /usr/local/bin/pifire/firstinstall >/dev/null

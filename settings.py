@@ -67,7 +67,7 @@ if(args.range):
 
 if(args.version):
     version = args.version
-    print(f"\n * Modifying Server Version {settings['versions']['server']} to {version}")
+    print(f"\nModifying Server Version {settings['versions']['server']} to {version}")
     settings['versions']['server'] = version
     WriteSettings(settings)
 
