@@ -1512,7 +1512,8 @@ def request_info_data():
 		'ifconfig' : ifconfig,
 		'temp' : temp,
 		'outpins' : settings['outpins'],
-		'inpins' : settings['inpins']
+		'inpins' : settings['inpins'],
+		'server_version' : settings['versions']['server']
 	}
 
 	return info_list
