@@ -61,9 +61,10 @@
         </copy>
         <mkdir dir="${debian-root}/etc/nginx/sites-available"/>
         <copy todir="${debian-root}/etc/nginx/sites-available">
-            <fileset dir="${nginx-configs}/sites-available">
+            <fileset dir="${nginx-configs}">
                 <include name="**"/>
             </fileset>
+            <globmapper from="*.nginx" to="*"/>
         </copy>
     </target>
 
@@ -78,6 +79,10 @@
                      entry that follows will only try to create the final
                      .../docs directory. -->
                 <include name="usr/local/bin/pifire/**"/>
+                <exclude name="usr/local/bin/pifire/*.sh"/>
+            </tarfileset>
+            <tarfileset dir="${debian-root}" filemode="755">
+                <include name="usr/local/bin/pifire/*.sh"/>
             </tarfileset>
         </tar>
 
@@ -131,6 +136,10 @@
                      entry that follows will only try to create the final
                      .../docs directory. -->
                 <include name="usr/local/bin/pifire/**"/>
+                <exclude name="usr/local/bin/pifire/*.sh"/>
+            </tarfileset>
+            <tarfileset dir="${debian-root}" filemode="755">
+                <include name="usr/local/bin/pifire/*.sh"/>
             </tarfileset>
         </tar>
 

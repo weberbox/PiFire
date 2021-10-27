@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ### Check if this is a fresh install or upgrade
-if [ -f "/usr/local/bin/pifire/firstinstall" ]; then
+if [ -f "/usr/local/bin/pifire/upgradecheck" ]; then
   ## Update settings server version
   cd /usr/local/bin/pifire || exit 1 # Change dir to where the settings.py application is (and common.py)
   python3 settings.py -v @VERSION@
@@ -37,7 +37,6 @@ sudo -H pip3 install redis
 sudo -H pip3 install uuid
 
 ### Setup nginx to proxy to gunicorn
-
 # Delete default configuration
 rm /etc/nginx/sites-enabled/default
 
@@ -164,7 +163,7 @@ fi
 ## Update settings server version
 python3 /usr/local/bin/pifire/settings.py -v @VERSION@
 
-echo " " | sudo tee -a /usr/local/bin/pifire/firstinstall >/dev/null
+echo " " | sudo tee -a /usr/local/bin/pifire/upgradecheck >/dev/null
 
 # Finished
 whiptail --msgbox --backtitle "Install Complete / Reboot Required" --title "Installation Completed" "Congratulations, the installation is complete.  At this time, you should reboot your system to complete the installation.  You should be able to access your application by opening a browser on your PC or other device and using the IP address for this Pi.  Enjoy!" ${r} ${c}
