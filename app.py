@@ -2115,11 +2115,6 @@ def update_manual_data(json_data):
 			else:
 				control['updated'] = True
 				control['mode'] = 'Stop'
-				control['manual']['change'] = True
-				control['manual']['fan'] = False
-				control['manual']['auger'] = False
-				control['manual']['igniter'] = False
-				control['manual']['power'] = False
 
 		if('change_output_fan' in data['manual']):
 			if(data['manual']['change_output_fan']=='true'):
