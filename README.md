@@ -72,11 +72,11 @@ Here's a brief YouTube video giving a basic overview of the PiFire web interface
 
 ### PiFire Overview Video
 
-![YouTube Demo](docs/photos/Video-Link-Image-sm.png)](https://youtu.be/_sIkpIFP5qA)
+[![YouTube Demo](docs/photos/Video-Link-Image-sm.png)](https://youtu.be/_sIkpIFP5qA)
 
 Here's a picture of my version 1.0 hardware w/OLED screen in a waterproof project box.
 
-[Hardware v1](docs/photos/HW-V1-Display.jpg)
+![Hardware v1](docs/photos/HW-V1-Display.jpg)
 
 Here is a the latest version 2.0 of the hardware w/TFT screen and hardware buttons in a custom 3D printed enclosure. We've come a long way since v1.0.
 
