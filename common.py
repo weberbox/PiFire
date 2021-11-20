@@ -419,7 +419,7 @@ def WriteControl(control):
 	cmdsts.set('control:general', json.dumps(control))
 
 
-def ReadSettings():
+def ReadSettings(filename='settings.json'):
 	# *****************************************
 	# Read Settings from file
 	# *****************************************
@@ -428,7 +428,7 @@ def ReadSettings():
 	settings = DefaultSettings()
 
 	try:
-		json_data_file = os.fdopen(os.open('settings.json', os.O_RDONLY))
+		json_data_file = os.fdopen(os.open(filename, os.O_RDONLY))
 		#json_data_file = open("settings.json", "r")
 		json_data_string = json_data_file.read()
 		settings_struct = json.loads(json_data_string)
@@ -446,7 +446,7 @@ def ReadSettings():
 		WriteLog(event)
 		json_data_file.close()
 		# Retry Reading Settings
-		settings_struct = ReadSettings() 
+		settings_struct = ReadSettings(filename=filename)
 
 	# Overlay the read values over the top of the default settings
 	#  This ensures that any NEW fields are captured.  
@@ -459,9 +459,9 @@ def ReadSettings():
 					update_settings = True
 			settings[key].update(settings_struct.get(key, {}))
 		else: 
-			update_settings = True 
+			update_settings = True
 
-	if update_settings: # If any of the keys were added, then write back the changes 
+	if (update_settings) or (filename != 'settings.json'): # If any of the keys were added, then write back the changes
 		WriteSettings(settings)
 		#print('key mismatch - update flag set')
 	
@@ -504,21 +504,38 @@ def WriteRecipes(recipes):
 	with open("recipes.json", 'w') as recipes_file:
 		recipes_file.write(json_data_string)
 
-def ReadPelletDB():
+def ReadPelletDB(filename='pelletdb.json'):
 	# *****************************************
 	# Read Pellet DataBase from file
 	# *****************************************
 
+	pelletdb = DefaultPellets()
+
 	# Read all lines of pelletdb.json into an list(array)
 	try:
-		json_data_file = os.fdopen(os.open('pelletdb.json', os.O_RDONLY))
+		json_data_file = os.fdopen(os.open(filename, os.O_RDONLY))
 		#json_data_file = open("pelletdb.json", "r")
 		json_data_string = json_data_file.read()
-		pelletdb = json.loads(json_data_string)
+		pelletdb_struct = json.loads(json_data_string)
 		json_data_file.close()
 	except(IOError, OSError):
 		# Issue with reading JSON, so create one/write new one
 		pelletdb = DefaultPellets()
+		WritePelletDB(pelletdb)
+		return(pelletdb)
+
+	# Overlay the read values over the top of the default values
+	#  This ensures that any NEW fields are captured.
+	update_db = False # set flag in case an update needs to be written back
+
+	for key in pelletdb.keys():
+		if key in pelletdb_struct.keys():
+			pelletdb[key] = pelletdb_struct[key].copy()
+		else:
+			update_db = True
+
+		# If any of the keys were added or if restoring from file, then write back the changes
+	if (update_db) or (filename != 'pelletdb.json'):
 		WritePelletDB(pelletdb)
 
 	return(pelletdb)
