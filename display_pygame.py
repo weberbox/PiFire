@@ -27,10 +27,11 @@ import time
 
 class Display:
 
-	def __init__(self):
+	def __init__(self, units='F'):
 		# Set Display Width and Height.  Modify for your needs.   
 		self.WIDTH = 240
 		self.HEIGHT = 240
+		self.units = units
 		# Activate PyGame
 		pygame.init()
 
@@ -45,6 +46,7 @@ class Display:
 
 
 	def DisplayStatus(self, in_data, status_data):
+		self.units = status_data['units']
 		# Create canvas
 		img = Image.new('RGB', (self.WIDTH, self.HEIGHT), color=(0, 0, 0))
 
@@ -52,8 +54,10 @@ class Display:
 		draw = ImageDraw.Draw(img)
 
 		# Grill Temperature (Large Centered) 
-		#font = ImageFont.truetype("impact.ttf", 100)
-		font = ImageFont.truetype("trebuc.ttf", 128)
+		if(self.units == 'F'):
+			font = ImageFont.truetype("trebuc.ttf", 128)
+		else:
+			font = ImageFont.truetype("trebuc.ttf", 80)
 		text = str(in_data['GrillTemp'])[:5]
 		(font_width, font_height) = font.getsize(text)
 		draw.text((self.WIDTH//2 - font_width//2,0), text, font=font, fill=(255,255,255))

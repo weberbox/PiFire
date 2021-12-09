@@ -19,8 +19,9 @@ import datetime
 
 class ReadADC:
 
-	def __init__(self, grill_probe1_profile, grill_probe2_profile, probe_01_profile, probe_02_profile):
+	def __init__(self, grill_probe1_profile, grill_probe2_profile, probe_01_profile, probe_02_profile, units='F'):
 		self.ads = ADS1115.ADS1115()
+		self.units = units
 		self.SetProfiles(grill_probe1_profile, grill_probe2_profile, probe_01_profile, probe_02_profile)
 
 	def SetProfiles(self, grill_probe1_profile, grill_probe2_profile, probe_01_profile, probe_02_profile):
@@ -71,9 +72,13 @@ class ReadADC:
 
 		else:
 			tempF = 0.0
+			tempC = 0.0
 			Tr = 0
 
-		return tempF, Tr  # Return Calculated Temperature and Thermistor Value in Ohms
+		if self.units == 'F':
+			return tempF, Tr  # Return Calculated Temperature and Thermistor Value in Ohms
+		else:
+			return tempC, Tr  # Return Calculated Temperature and Thermistor Value in Ohms
 
 	def ReadAllPorts(self):
 		adc_value = [0,0,0,0]
@@ -107,3 +112,9 @@ class ReadADC:
 		adc_data['Grill2Temp'], adc_data['Grill2Tr'] = self.adctotemp(adc_value[3], self.grill_probe2_profile)
 
 		return (adc_data)
+
+	def update_units(self, units):
+		if units == 'C':
+			self.units = 'C'
+		else:
+			self.units = 'F'

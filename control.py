@@ -54,6 +54,8 @@ elif(settings['modules']['display'] == 'pygame_240x320'):
 	from display_pygame_240x320 import Display # Library for controlling the display device
 elif(settings['modules']['display'] == 'pygame_240x320b'):
 	from display_pygame_240x320b import Display # Library for controlling the display device
+elif(settings['modules']['display'] == 'pygame_64x128'):
+	from display_pygame_64x128 import Display # Library for controlling the display device
 elif(settings['modules']['display'] == 'ili9341'):
 	from display_ili9341 import Display # Library for controlling the display device
 elif(settings['modules']['display'] == 'ili9341b'):
@@ -94,6 +96,7 @@ def GetStatus(grill_platform, control, settings, pelletdb):
 	status_data['ipaddress'] = '192.168.10.43' # Future implementation (TODO)
 	status_data['s_plus'] = control['s_plus']
 	status_data['hopper_level'] = pelletdb['current']['hopper_level']
+	status_data['units'] = settings['globals']['units']
 
 	return(status_data)
 
@@ -161,9 +164,9 @@ def WorkCycle(mode, grill_platform, adc_device, display_device, dist_device):
 			WriteLog(event)
 
 	# Initialize all temperature variables
-	AvgGT = TempQueue()
-	AvgP1 = TempQueue()
-	AvgP2 = TempQueue()
+	AvgGT = TempQueue(units=settings['globals']['units'])
+	AvgP1 = TempQueue(units=settings['globals']['units'])
+	AvgP2 = TempQueue(units=settings['globals']['units'])
 
 	# Check pellets level notification upon starting cycle
 	CheckNotifyPellets(control, settings, pelletdb)
@@ -204,7 +207,7 @@ def WorkCycle(mode, grill_platform, adc_device, display_device, dist_device):
 		#control = ReadControl()  # Read Modify Write
 		control['safety']['startuptemp'] = int(max((AvgGT.average()*0.9), settings['safety']['minstartuptemp']))
 		control['safety']['startuptemp'] = int(min(control['safety']['startuptemp'], settings['safety']['maxstartuptemp']))
-		control['safety']['afterstarttemp'] = int(AvgGT.average())
+		control['safety']['afterstarttemp'] = AvgGT.average()
 		WriteControl(control)
 	# Check if the temperature of the grill dropped below the startuptemperature 
 	elif ((mode == 'Hold') or (mode == 'Smoke')):
@@ -212,7 +215,7 @@ def WorkCycle(mode, grill_platform, adc_device, display_device, dist_device):
 			if(control['safety']['reigniteretries'] == 0):
 				status = 'Inactive'
 				event = 'ERROR: Grill temperature dropped below minimum startup temperature of ' + \
-						str(control['safety']['startuptemp']) + 'F! Shutting down to prevent firepot overload.'
+						str(control['safety']['startuptemp']) + settings['globals']['units'] + '! Shutting down to prevent firepot overload.'
 				WriteLog(event)
 				display_device.DisplayText('ERROR')
 				#control = ReadControl()  # Read Modify Write
@@ -226,7 +229,7 @@ def WorkCycle(mode, grill_platform, adc_device, display_device, dist_device):
 				control['safety']['reignitelaststate'] = mode 
 				status = 'Inactive'
 				event = 'ERROR: Grill temperature dropped below minimum startup temperature of ' + \
-						str(control['safety']['startuptemp']) + 'F. Starting a re-ignite attempt, per user settings.'
+						str(control['safety']['startuptemp']) + settings['globals']['units'] + '. Starting a re-ignite attempt, per user settings.'
 				WriteLog(event)
 				display_device.DisplayText('Re-Ignite')
 				control['mode'] = 'Reignite'
@@ -387,11 +390,11 @@ def WorkCycle(mode, grill_platform, adc_device, display_device, dist_device):
 		AvgP2.enqueue(adc_data['Probe2Temp'])
 
 		in_data = {}
-		in_data['GrillTemp'] = int(AvgGT.average())
+		in_data['GrillTemp'] = AvgGT.average()
 		in_data['GrillSetPoint'] = control['setpoints']['grill']
-		in_data['Probe1Temp'] = int(AvgP1.average())
+		in_data['Probe1Temp'] = AvgP1.average()
 		in_data['Probe1SetPoint'] = control['setpoints']['probe1']
-		in_data['Probe2Temp'] = int(AvgP2.average())
+		in_data['Probe2Temp'] = AvgP2.average()
 		in_data['Probe2SetPoint'] = control['setpoints']['probe2']
 
 		if(settings['globals']['four_probes'] == True):
@@ -421,13 +424,13 @@ def WorkCycle(mode, grill_platform, adc_device, display_device, dist_device):
 
 		# Safety Controls
 		if ((mode == 'Startup') or (mode == 'Reignite')):
-			control['safety']['afterstarttemp'] = int(AvgGT.average())
+			control['safety']['afterstarttemp'] = AvgGT.average()
 		elif ((mode == 'Hold') or (mode == 'Smoke')):
 			if (AvgGT.average() < control['safety']['startuptemp']):
 				if(control['safety']['reigniteretries'] == 0):
 					status = 'Inactive'
 					event = 'ERROR: Grill temperature dropped below minimum startup temperature of ' + \
-							str(control['safety']['startuptemp']) + 'F! Shutting down to prevent firepot overload.'
+							str(control['safety']['startuptemp']) + settings['globals']['units'] + '! Shutting down to prevent firepot overload.'
 					WriteLog(event)
 					display_device.DisplayText('ERROR')
 					#control = ReadControl()  # Read Modify Write
@@ -440,7 +443,7 @@ def WorkCycle(mode, grill_platform, adc_device, display_device, dist_device):
 					control['safety']['reignitelaststate'] = mode 
 					status = 'Inactive'
 					event = 'ERROR: Grill temperature dropped below minimum startup temperature of ' + \
-							str(control['safety']['startuptemp']) + 'F. Starting a re-ignite attempt, per user settings.'
+							str(control['safety']['startuptemp']) + settings['globals']['units'] + '. Starting a re-ignite attempt, per user settings.'
 					WriteLog(event)
 					display_device.DisplayText('Re-Ignite')
 					#control = ReadControl()  # Read Modify Write
@@ -486,8 +489,7 @@ def WorkCycle(mode, grill_platform, adc_device, display_device, dist_device):
 		# Write History after 3 seconds has passed
 		if (now - temptoggletime > 3):
 			temptoggletime = time.time()
-			WriteHistory(in_data)
-			#status_data = GetStatus(grill_platform, control, settings, pelletdb) # Does this need to be here? 
+			WriteHistory(in_data, tuning_mode=control['tuning_mode'])
 
 		# Check if 240s have elapsed since startup/reignite mode started
 		if ((mode == 'Startup') or (mode == 'Reignite')):
@@ -520,7 +522,7 @@ def WorkCycle(mode, grill_platform, adc_device, display_device, dist_device):
 			WriteLog(event)
 	if ((mode == 'Startup') or (mode == 'Reignite')):
 		#control = ReadControl()  # Read Modify Write
-		control['safety']['afterstarttemp'] = int(AvgGT.average())
+		control['safety']['afterstarttemp'] = AvgGT.average()
 		WriteControl(control)
 	event = mode + ' mode ended.'
 	WriteLog(event)
@@ -544,15 +546,15 @@ def Monitor(grill_platform, adc_device, display_device, dist_device):
 	grill_platform.FanOff()
 	grill_platform.PowerOff()
 
-	# Initialize all temperature objects
-	AvgGT = TempQueue()
-	AvgP1 = TempQueue()
-	AvgP2 = TempQueue()
-
 	# Setup Cycle Parameters
 	settings = ReadSettings()
 	control = ReadControl()
 	pelletdb = ReadPelletDB()
+
+	# Initialize all temperature objects
+	AvgGT = TempQueue(units=settings['globals']['units'])
+	AvgP1 = TempQueue(units=settings['globals']['units'])
+	AvgP2 = TempQueue(units=settings['globals']['units'])
 
 	# Check pellets level notification upon starting cycle
 	CheckNotifyPellets(control, settings, pelletdb)
@@ -689,11 +691,11 @@ def Monitor(grill_platform, adc_device, display_device, dist_device):
 		AvgP2.enqueue(adc_data['Probe2Temp'])
 
 		in_data = {}
-		in_data['GrillTemp'] = int(AvgGT.average())
+		in_data['GrillTemp'] = AvgGT.average()
 		in_data['GrillSetPoint'] = control['setpoints']['grill']
-		in_data['Probe1Temp'] = int(AvgP1.average())
+		in_data['Probe1Temp'] = AvgP1.average()
 		in_data['Probe1SetPoint'] = control['setpoints']['probe1']
-		in_data['Probe2Temp'] = int(AvgP2.average())
+		in_data['Probe2Temp'] = AvgP2.average()
 		in_data['Probe2SetPoint'] = control['setpoints']['probe2']
 
 		if(settings['globals']['four_probes'] == True):
@@ -722,13 +724,14 @@ def Monitor(grill_platform, adc_device, display_device, dist_device):
 
 		# Write History after 3 seconds has passed
 		if (now - temptoggletime > 3):
-			temptoggletime = now 
-			WriteHistory(in_data)
+			temptoggletime = now
+			WriteHistory(in_data, tuning_mode=control['tuning_mode'])
 
 		# Safety Control Section
 		if (AvgGT.average() > settings['safety']['maxtemp']):
 			status = 'Inactive'
-			event = 'ERROR: Grill exceed maximum temperature limit of ' + str(settings['safety']['maxtemp']) + 'F! Shutting down.'
+			event = 'ERROR: Grill exceed maximum temperature limit of ' + \
+					str(settings['safety']['maxtemp']) + settings['globals']['units'] + '! Shutting down.'
 			WriteLog(event)
 			display_device.DisplayText('ERROR')
 			#control = ReadControl()  # Read Modify Write
@@ -767,9 +770,9 @@ def Manual_Mode(grill_platform, adc_device, display_device, dist_device):
 	grill_platform.PowerOff()
 
 	# Initialize all temperature variables
-	AvgGT = TempQueue()
-	AvgP1 = TempQueue()
-	AvgP2 = TempQueue()
+	AvgGT = TempQueue(units=settings['globals']['units'])
+	AvgP1 = TempQueue(units=settings['globals']['units'])
+	AvgP2 = TempQueue(units=settings['globals']['units'])
 
 	# Collect Initial Temperature Information
 	# Get Probe Types From Settings
@@ -902,11 +905,11 @@ def Manual_Mode(grill_platform, adc_device, display_device, dist_device):
 		AvgP2.enqueue(adc_data['Probe2Temp'])
 
 		in_data = {}
-		in_data['GrillTemp'] = int(AvgGT.average())
+		in_data['GrillTemp'] = AvgGT.average()
 		in_data['GrillSetPoint'] = control['setpoints']['grill']
-		in_data['Probe1Temp'] = int(AvgP1.average())
+		in_data['Probe1Temp'] = AvgP1.average()
 		in_data['Probe1SetPoint'] = control['setpoints']['probe1']
-		in_data['Probe2Temp'] = int(AvgP2.average())
+		in_data['Probe2Temp'] = AvgP2.average()
 		in_data['Probe2SetPoint'] = control['setpoints']['probe2']
 
 		if(settings['globals']['four_probes'] == True):
@@ -933,7 +936,7 @@ def Manual_Mode(grill_platform, adc_device, display_device, dist_device):
 		# Write History after 3 seconds has passed
 		if (now - temptoggletime > 3):
 			temptoggletime = time.time()
-			WriteHistory(in_data)
+			WriteHistory(in_data, tuning_mode=control['tuning_mode'])
 
 		time.sleep(0.2)
 
@@ -998,15 +1001,17 @@ def Recipe_Mode(grill_platform, adc_device, display_device, dist_device):
 def SendPushoverNotification(notifyevent, control, settings, pelletdb):
 	now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
 
+	unit = settings['globals']['units']
+
 	if "Grill_Temp_Achieved" in notifyevent:
-		notifymessage = "The Grill setpoint of " + str(control['setpoints']['grill']) + "F was achieved at " + str(now)
-		subjectmessage = "Grill at " + str(control['setpoints']['grill']) + "F at " + str(now)
+		notifymessage = "The Grill setpoint of " + str(control['setpoints']['grill']) + unit + " was achieved at " + str(now)
+		subjectmessage = "Grill at " + str(control['setpoints']['grill']) + unit + " at " + str(now)
 	elif "Probe1_Temp_Achieved" in notifyevent:
-		notifymessage = "The Probe 1 setpoint of " + str(control['setpoints']['probe1']) + "F was achieved at " + str(now)
-		subjectmessage = "Probe 1 at " + str(control['setpoints']['probe1']) + "F at " + str(now)
+		notifymessage = "The Probe 1 setpoint of " + str(control['setpoints']['probe1']) + unit + " was achieved at " + str(now)
+		subjectmessage = "Probe 1 at " + str(control['setpoints']['probe1']) + unit + " at " + str(now)
 	elif "Probe2_Temp_Achieved" in notifyevent:
 		notifymessage = "The Probe 2 setpoint of " + str(control['setpoints']['probe2']) + "F was achieved at " + str(now)
-		subjectmessage = "Probe 2 at " + str(control['setpoints']['probe2']) + "F at " + str(now)
+		subjectmessage = "Probe 2 at " + str(control['setpoints']['probe2']) + unit + " at " + str(now)
 	elif "Timer_Expired" in notifyevent:
 		notifymessage = "Your grill timer has expired, time to check your cook!"
 		subjectmessage = "Grill Timer Complete: " + str(now)
@@ -1017,10 +1022,10 @@ def SendPushoverNotification(notifyevent, control, settings, pelletdb):
 		notifymessage = "Your grill has experienced an error and will shutdown now. " + str(now)
 		subjectmessage = "Grill Error!"
 	elif "Grill_Error_01" in notifyevent:
-		notifymessage = "Grill exceed maximum temperature limit of " + str(settings['safety']['maxtemp']) + "F! Shutting down." + str(now)
+		notifymessage = "Grill exceed maximum temperature limit of " + str(settings['safety']['maxtemp']) + unit + "! Shutting down." + str(now)
 		subjectmessage = "Grill Error!"
 	elif "Grill_Error_02" in notifyevent:
-		notifymessage = "Grill temperature dropped below minimum startup temperature of " + str(control['safety']['startuptemp']) + "F! Shutting down to prevent firepot overload." + str(now)
+		notifymessage = "Grill temperature dropped below minimum startup temperature of " + str(control['safety']['startuptemp']) + unit + "! Shutting down to prevent firepot overload." + str(now)
 		subjectmessage = "Grill Error!"
 	elif "Grill_Warning" in notifyevent:
 		notifymessage = "Your grill has experienced a warning condition.  Please check the logs."  + str(now)
@@ -1057,15 +1062,17 @@ def SendPushoverNotification(notifyevent, control, settings, pelletdb):
 def SendPushBulletNotification(notifyevent, control, settings, pelletdb):
 	now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
 
+	unit = settings['globals']['units']
+
 	if "Grill_Temp_Achieved" in notifyevent:
-		notifymessage = "The Grill setpoint of " + str(control['setpoints']['grill']) + "F was achieved at " + str(now)
-		subjectmessage = "Grill at " + str(control['setpoints']['grill']) + "F at " + str(now)
+		notifymessage = "The Grill setpoint of " + str(control['setpoints']['grill']) + unit + " was achieved at " + str(now)
+		subjectmessage = "Grill at " + str(control['setpoints']['grill']) + unit + " at " + str(now)
 	elif "Probe1_Temp_Achieved" in notifyevent:
-		notifymessage = "The Probe 1 setpoint of " + str(control['setpoints']['probe1']) + "F was achieved at " + str(now)
-		subjectmessage = "Probe 1 at " + str(control['setpoints']['probe1']) + "F at " + str(now)
+		notifymessage = "The Probe 1 setpoint of " + str(control['setpoints']['probe1']) + unit + " was achieved at " + str(now)
+		subjectmessage = "Probe 1 at " + str(control['setpoints']['probe1']) + unit + " at " + str(now)
 	elif "Probe2_Temp_Achieved" in notifyevent:
 		notifymessage = "The Probe 2 setpoint of " + str(control['setpoints']['probe2']) + "F was achieved at " + str(now)
-		subjectmessage = "Probe 2 at " + str(control['setpoints']['probe2']) + "F at " + str(now)
+		subjectmessage = "Probe 2 at " + str(control['setpoints']['probe2']) + unit + " at " + str(now)
 	elif "Timer_Expired" in notifyevent:
 		notifymessage = "Your grill timer has expired, time to check your cook!"
 		subjectmessage = "Grill Timer Complete: " + str(now)
@@ -1076,10 +1083,10 @@ def SendPushBulletNotification(notifyevent, control, settings, pelletdb):
 		notifymessage = "Your grill has experienced an error and will shutdown now. " + str(now)
 		subjectmessage = "Grill Error!"
 	elif "Grill_Error_01" in notifyevent:
-		notifymessage = "Grill exceed maximum temperature limit of " + str(settings['safety']['maxtemp']) + "F! Shutting down." + str(now)
+		notifymessage = "Grill exceed maximum temperature limit of " + str(settings['safety']['maxtemp']) + unit + "! Shutting down." + str(now)
 		subjectmessage = "Grill Error!"
 	elif "Grill_Error_02" in notifyevent:
-		notifymessage = "Grill temperature dropped below minimum startup temperature of " + str(control['safety']['startuptemp']) + "F! Shutting down to prevent firepot overload." + str(now)
+		notifymessage = "Grill temperature dropped below minimum startup temperature of " + str(control['safety']['startuptemp']) + unit + "! Shutting down to prevent firepot overload." + str(now)
 		subjectmessage = "Grill Error!"
 	elif "Grill_Warning" in notifyevent:
 		notifymessage = "Your grill has experienced a warning condition.  Please check the logs."  + str(now)
@@ -1108,19 +1115,21 @@ def SendFirebaseNotification(notifyevent, control, settings, pelletdb):
 	time = date.strftime('%H:%M')
 	day = date.strftime('%m/%d')
 
+	unit = settings['globals']['units']
+
 	if "Grill_Temp_Achieved" in notifyevent:
 		titlemessage = "Grill Setpoint Achieved"
-		bodymessage = "Grill setpoint of " + str(control['setpoints']['grill']) + "F achieved at " + str(time) + " on " + str(day)
+		bodymessage = "Grill setpoint of " + str(control['setpoints']['grill']) + unit + " achieved at " + str(time) + " on " + str(day)
 		sound = 'temp_achieved'
 		channel = 'pifire_temp_alerts'
 	elif "Probe1_Temp_Achieved" in notifyevent:
 		titlemessage = "Probe 1 Setpoint Achieved"
-		bodymessage = "Probe 1 setpoint of " + str(control['setpoints']['probe1']) + "F achieved at " + str(time) + " on " + str(day)
+		bodymessage = "Probe 1 setpoint of " + str(control['setpoints']['probe1']) + unit + " achieved at " + str(time) + " on " + str(day)
 		sound = 'temp_achieved'
 		channel = 'pifire_temp_alerts'
 	elif "Probe2_Temp_Achieved" in notifyevent:
 		titlemessage = "Probe 2 Setpoint Achieved"
-		bodymessage = "Probe 2 setpoint of " + str(control['setpoints']['probe2']) + "F achieved at " + str(time) + " on " + str(day)
+		bodymessage = "Probe 2 setpoint of " + str(control['setpoints']['probe2']) + unit + " achieved at " + str(time) + " on " + str(day)
 		sound = 'temp_achieved'
 		channel = 'pifire_temp_alerts'
 	elif "Timer_Expired" in notifyevent:
@@ -1140,12 +1149,12 @@ def SendFirebaseNotification(notifyevent, control, settings, pelletdb):
 		channel = 'pifire_error_alerts'
 	elif "Grill_Error_01" in notifyevent:
 		titlemessage = "Grill Error!"
-		bodymessage = "Grill exceded maximum temperature limit of " + str(settings['safety']['maxtemp']) + "F! Shutting down." + str(now)
+		bodymessage = "Grill exceded maximum temperature limit of " + str(settings['safety']['maxtemp']) + unit + "! Shutting down." + str(now)
 		sound = 'grill_error'
 		channel = 'pifire_error_alerts'
 	elif "Grill_Error_02" in notifyevent:
 		titlemessage = "Grill Error!"
-		bodymessage = "Grill temperature dropped below minimum startup temperature of " + str(control['safety']['startuptemp']) + "F! Shutting down to prevent firepot overload." + str(now)
+		bodymessage = "Grill temperature dropped below minimum startup temperature of " + str(control['safety']['startuptemp']) + unit + "! Shutting down to prevent firepot overload." + str(now)
 		sound = 'grill_error'
 		channel = 'pifire_error_alerts'
 	elif "Grill_Warning" in notifyevent:
@@ -1314,6 +1323,7 @@ outpins = settings['outpins']
 inpins = settings['inpins']
 triggerlevel = settings['globals']['triggerlevel']
 buttonslevel = settings['globals']['buttonslevel']
+units = settings['globals']['units']
 
 if triggerlevel == 'LOW':
 	AUGERON = 0
@@ -1347,9 +1357,9 @@ else:
 
 # Start display device object and display splash
 if(str(settings['modules']['display']).endswith('b')):	
-	display_device = Display(buttonslevel)
+	display_device = Display(buttonslevel=buttonslevel, units=units)
 else:
-	display_device = Display()
+	display_device = Display(units=units)
 
 grill1type = settings['probe_types']['grill1type']
 grill2type = settings['probe_types']['grill2type']
@@ -1360,7 +1370,8 @@ probe2type = settings['probe_types']['probe2type']
 adc_device = ReadADC(settings['probe_settings']['probe_profiles'][grill1type],
 					 settings['probe_settings']['probe_profiles'][grill2type],
 					 settings['probe_settings']['probe_profiles'][probe1type],
-					 settings['probe_settings']['probe_profiles'][probe2type])
+					 settings['probe_settings']['probe_profiles'][probe2type],
+					 units=settings['globals']['units'])
 
 pelletdb = ReadPelletDB()
 
@@ -1429,7 +1440,19 @@ while True:
 			WriteLog(event)
 		# Clear control flag
 		control['updated'] = False # Reset Control Updated to False to acknowledge
-		WriteControl(control) # Commit change in 'updated' status to the file 
+		WriteControl(control) # Commit change in 'updated' status to the file
+
+		if(control['units_change']):
+			if(settings['globals']['debug_mode'] == True):
+				event = "Changing Base Units."
+				print(event)
+				WriteLog(event)
+			settings = ReadSettings()
+			# Update ADC object and set profiles
+			adc_device.update_units(settings['globals']['units'])
+			control['mode'] = 'Stop'  # Stop any activity
+			control['units_change'] = False
+			ReadHistory(0, flushhistory=True)  # Clear history data
 
 		# Check if there was an Error flagged in Monitor Mode - If no, then change status to active
 		if(control['status'] != 'monitor') and (control['mode'] != 'Error'):
@@ -1451,6 +1474,7 @@ while True:
 				# Reset Control to Defaults
 				control = ReadControl(flush=True)
 				control['updated'] = False
+				control['tuning_mode'] = False  # Turn off Tuning Mode on Stop just in case it is on
 				WriteControl(control)
 			else:
 				event = "ERROR: An error has occured, Stop Mode enabled."
@@ -1458,6 +1482,7 @@ while True:
 				control = DefaultControl()
 				control['mode'] = 'Error'
 				control['status'] = 'inactive'
+				control['tuning_mode'] = False  # Turn off Tuning Mode on Stop just in case it is on
 				control['updated'] = False
 				WriteControl(control)
 
