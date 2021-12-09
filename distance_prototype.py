@@ -9,13 +9,14 @@
 # *****************************************
 
 import random
-from common import WriteLog, ReadSettings
+from common import WriteLog
 
 class HopperLevel:
 
-	def __init__(self, empty=22, full=4):
+	def __init__(self, empty=22, full=4, test=False):
 		self.empty = empty # Empty is greater than distance measured for empty
 		self.full = full # Full is less than or equal to the minimum full distance.
+		self.test = test
 		if self.empty <= self.full:
 			event = 'ERROR: Invalid Hopper Level Configuration Empty Level <= Full Level (forcing defaults)'
 			WriteLog(event)
@@ -29,8 +30,7 @@ class HopperLevel:
 		return()
 
 	def GetLevel(self):
-		settings = ReadSettings()
-		if(settings['modules']['grillplat'] == 'prototype'):
+		if(self.test):
 			return random.randint(10, 100)
 		else:
 			return 100
