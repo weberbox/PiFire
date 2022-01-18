@@ -58,6 +58,8 @@ elif(settings['modules']['display'] == 'pygame_64x128'):
 	from display_pygame_64x128 import Display # Library for controlling the display device
 elif(settings['modules']['display'] == 'ili9341'):
 	from display_ili9341 import Display # Library for controlling the display device
+elif(settings['modules']['display'] == 'ili9341_encoder'):
+	from display_ili9341_encoder import Display # Library for controlling the display device
 elif(settings['modules']['display'] == 'ili9341b'):
 	from display_ili9341b import Display # Library for controlling the display device
 else:
@@ -710,7 +712,8 @@ def Monitor(grill_platform, adc_device, display_device, dist_device):
 
 		in_data['Probe1Tr'] = adc_data['Probe1Tr']
 		in_data['Probe2Tr'] = adc_data['Probe2Tr']
-		
+
+		# Check to see if there are any pending notifications (i.e. Timer / Temperature Settings)
 		control = CheckNotify(in_data, control, settings, pelletdb)
 
 		# Check for button input event
