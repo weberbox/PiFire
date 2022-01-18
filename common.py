@@ -57,7 +57,8 @@ def DefaultSettings():
 		'shutdown_timer' : 60,
 		'startup_timer' : 240,
 		'four_probes' : True,
-		'units' : 'F'
+		'units' : 'F',
+		'augerrate' : 0.3 # (grams per second) default auger load rate is 10 grams / 30 seconds
 	}
 
 	settings['ifttt'] = {
@@ -248,6 +249,15 @@ def DefaultControl():
 
 	return(control)
 
+def DefaultMetrics():
+	metrics = {}
+
+	metrics['starttime'] = 0
+	metrics['endtime'] = 0
+	metrics['augerontime'] = 0
+
+	return(metrics)
+
 def DefaultRecipes():
 	recipes = {}
 
@@ -292,6 +302,7 @@ def DefaultPellets():
 		'pelletid' : ID,			# Pellet ID for the profile currently loaded
 		'hopper_level' : 100,	# Percentage of pellets remaining
 		'date_loaded' : now, 		# Date that current pellets loaded
+		'est_usage' : 0			# Estimated usage since loading (use auger load rate, and auger on time)
 	}
 
 	pelletdb['woods'] = ['Alder', 'Almond', 'Apple', 'Apricot', 'Blend', 'Competition', 'Cherry', 'Chestnut', 'Hickory', 'Lemon', 'Maple', 'Mesquite', 'Mulberry', 'Nectarine', 'Oak', 'Orange', 'Peach', 'Pear', 'Plum', 'Walnut' ]
@@ -303,8 +314,8 @@ def DefaultPellets():
 			'id' : ID,
 			'brand' : 'Generic', 
 			'wood' : 'Alder', 
-			'rating' : 4, 
-			'comments' : 'This is a placeholder profile.  Alder is generic and used in almost all pellets, regardless of the wood type indicated on the packaging.  It tends to burn consistantly and produces a mild smoke.'
+			'rating' : 4,
+			'comments' : 'This is a placeholder profile.  Alder is generic and used in almost all pellets, regardless of the wood type indicated on the packaging.  It tends to burn consistently and produces a mild smoke.',
 		}
 	}
 
@@ -432,6 +443,29 @@ def WriteControl(control):
 	global cmdsts
 
 	cmdsts.set('control:general', json.dumps(control))
+
+def ReadMetrics(flush=False):
+	global cmdsts
+
+	if flush:
+		# Remove all control structures in Redis DB (not history or current)
+		cmdsts.delete('metrics:general')
+
+		# The following set's no persistence so that we don't get writes to the disk / SDCard
+		cmdsts.config_set('appendonly', 'no')
+		cmdsts.config_set('save', '')
+
+		metrics = DefaultMetrics()
+		WriteMetrics(metrics)
+	else:
+		metrics = json.loads(cmdsts.get('metrics:general'))
+
+	return(metrics)
+
+def WriteMetrics(metrics):
+	global cmdsts
+
+	cmdsts.set('metrics:general', json.dumps(metrics))
 
 
 def ReadSettings(filename='settings.json'):
