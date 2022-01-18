@@ -63,6 +63,13 @@ elif settings['modules']['display'] == 'ili9341b':
 else:
 	from display_prototype import Display  # Simulated Library for controlling the display device
 
+if settings['modules']['dist'] == 'vl53l0x':
+	from distance_vl53l0x import HopperLevel  # Library for reading the HopperLevel from vl53l0x TOF Sensor
+elif settings['modules']['dist'] == 'hcsr04':
+	from distance_hcsr04 import HopperLevel  # Library for reading HopperLevel HC-SR04 Ultrasonic Sensor
+else:
+	from distance_prototype import HopperLevel  # Simulated Library for reading the HopperLevel
+
 for probe_source in settings['probe_settings']['probe_sources']:
 	# if any of the probes uses max31865 then load the library
 	if 'max31865' in probe_source:
@@ -79,9 +86,9 @@ def ReadProbes(settings, adc_device, units):
 
 	prob_data = {}
 
-	probe_ids = ['Grill', 'Probe1', 'Probe2']
+	probe_ids = ['Grill1', 'Probe1', 'Probe2', 'Grill2']
 	adc_properties = ['Temp', 'Tr']
-	adc_probe_indices = ['Grill', 'Probe1', 'Probe2']
+	adc_probe_indices = ['Grill1', 'Probe1', 'Probe2', 'Grill2']
 	for idx, probe_source in enumerate(settings['probe_settings']['probe_sources']):
 		if 'ADC' in probe_source and len(probe_source) > 3:
 			# map ADC probes to the output probes. i.e ADC0 is adc_probe_indices[0] => 'Grill' so if this is defined

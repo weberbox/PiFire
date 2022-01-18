@@ -32,7 +32,7 @@ def DefaultSettings():
 	settings = {}
 
 	settings['versions'] = {
-		'server' : "1.2.2"
+		'server' : "1.2.3"
 	}
 
 	settings['history_page'] = {
@@ -45,7 +45,7 @@ def DefaultSettings():
 	settings['probe_settings'] = {
 		'probe_profiles' :  DefaultProbeProfiles(),
 		'probes_enabled' : [1,1,1],
-		'probe_sources'  : ['ADC0', 'ADC1', 'ADC2']
+		'probe_sources'  : ['ADC0', 'ADC1', 'ADC2', 'ADC3']
 	}
 
 	settings['globals'] = {
