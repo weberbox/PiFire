@@ -34,6 +34,7 @@ sudo -H pip3 install flask-socketio
 sudo -H pip3 install eventlet==0.30.2
 sudo -H pip3 install redis
 sudo -H pip3 install uuid
+sudo -H pip3 install influxdb-client[ciso]
 
 ### Setup nginx to proxy to gunicorn
 # Delete default configuration

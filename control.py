@@ -24,6 +24,7 @@ from pushbullet import Pushbullet  # Pushbullet Import
 
 import pid as PID  # Library for calculating PID setpoints
 from common import *  # Common Library for WebUI and Control Program
+
 from temp_queue import TempQueue
 
 # Read Settings to Get Modules Configuration 
@@ -62,9 +63,38 @@ elif settings['modules']['display'] == 'ili9341b':
 else:
 	from display_prototype import Display  # Simulated Library for controlling the display device
 
+for probe_source in settings['probe_settings']['probe_sources']:
+	# if any of the probes uses max31865 then load the library
+	if 'max31865' in probe_source:
+		from probe_max31865 import probe_max31865_read
+
+		break
+
+
 # *****************************************
 # Function Definitions
 # *****************************************
+def ReadProbes(settings, adc_device, units):
+	adc_data = adc_device.ReadAllPorts()
+
+	prob_data = {}
+
+	probe_ids = ['Grill', 'Probe1', 'Probe2']
+	adc_properties = ['Temp', 'Tr']
+	adc_probe_indices = ['Grill', 'Probe1', 'Probe2']
+	for idx, probe_source in enumerate(settings['probe_settings']['probe_sources']):
+		if 'ADC' in probe_source and len(probe_source) > 3:
+			# map ADC probes to the output probes. i.e ADC0 is adc_probe_indices[0] => 'Grill' so if this is defined
+			# for first source map Grill to Grill. If ADC1 in first source map it to Probe1
+			source_index = int(probe_source[3:])
+			for p in adc_properties:
+				prob_data[probe_ids[idx] + p] = adc_data[adc_probe_indices[source_index] + p]
+		elif 'max31865' in probe_source:
+			temperature, resistance = probe_max31865_read(units=units)
+			prob_data[probe_ids[idx] + adc_properties[0]] = temperature
+			prob_data[probe_ids[idx] + adc_properties[1]] = resistance
+
+	return prob_data
 
 
 def GetStatus(grill_platform, control, settings, pelletdb):
@@ -176,9 +206,8 @@ def WorkCycle(mode, grill_platform, adc_device, display_device, dist_device):
 						   settings['probe_settings']['probe_profiles'][grill2type],
 						   settings['probe_settings']['probe_profiles'][probe1type],
 						   settings['probe_settings']['probe_profiles'][probe2type])
-	
-	adc_data = {}
-	adc_data = adc_device.ReadAllPorts()
+
+	adc_data = ReadProbes(settings, adc_device, units)
 
 	if settings['globals']['four_probes']:
 		if settings['grill_probe_settings']['grill_probe_enabled'][2] == 1:
@@ -367,8 +396,7 @@ def WorkCycle(mode, grill_platform, adc_device, display_device, dist_device):
 								   settings['probe_settings']['probe_profiles'][probe2type])
 
 		# Get temperatures from all probes
-		adc_data = {}
-		adc_data = adc_device.ReadAllPorts()
+		adc_data = ReadProbes(settings, adc_device, units)
 
 		# Test temperature data returned for errors (+/- 20% Temp Variance), and average the data since last reading
 		if settings['globals']['four_probes']:
@@ -406,7 +434,7 @@ def WorkCycle(mode, grill_platform, adc_device, display_device, dist_device):
 		in_data['Probe2Tr'] = adc_data['Probe2Tr']  # For Temp Resistance Tuning
 
 		# Check to see if there are any pending notifications (i.e. Timer / Temperature Settings)
-		control = CheckNotify(in_data, control, settings, pelletdb)
+		control = CheckNotify(in_data, control, settings, pelletdb, grill_platform)
 
 		# Check for button input event
 		display_device.EventDetect()
@@ -570,8 +598,7 @@ def Monitor(grill_platform, adc_device, display_device, dist_device):
 						   settings['probe_settings']['probe_profiles'][probe1type],
 						   settings['probe_settings']['probe_profiles'][probe2type])
 
-	adc_data = {}
-	adc_data = adc_device.ReadAllPorts()
+	adc_data = ReadProbes(settings, adc_device, units)
 
 	if settings['globals']['four_probes']:
 		if settings['grill_probe_settings']['grill_probe_enabled'][2] == 1:
@@ -672,8 +699,7 @@ def Monitor(grill_platform, adc_device, display_device, dist_device):
 								   settings['probe_settings']['probe_profiles'][probe1type],
 								   settings['probe_settings']['probe_profiles'][probe2type])
 
-		adc_data = {}
-		adc_data = adc_device.ReadAllPorts()
+		adc_data = ReadProbes(settings, adc_device, units)
 
 		# Test temperature data returned for errors (+/- 20% Temp Variance), and average the data since last reading
 		if settings['globals']['four_probes']:
@@ -711,7 +737,7 @@ def Monitor(grill_platform, adc_device, display_device, dist_device):
 		in_data['Probe2Tr'] = adc_data['Probe2Tr']
 
 		# Check to see if there are any pending notifications (i.e. Timer / Temperature Settings)
-		control = CheckNotify(in_data, control, settings, pelletdb)
+		control = CheckNotify(in_data, control, settings, pelletdb, grill_platform)
 
 		# Check for button input event
 		display_device.EventDetect()
@@ -786,8 +812,7 @@ def Manual_Mode(grill_platform, adc_device, display_device, dist_device):
 						   settings['probe_settings']['probe_profiles'][probe1type],
 						   settings['probe_settings']['probe_profiles'][probe2type])
 
-	adc_data = {}
-	adc_data = adc_device.ReadAllPorts()
+	adc_data = ReadProbes(settings, adc_device, units)
 
 	if settings['globals']['four_probes']:
 		if settings['grill_probe_settings']['grill_probe_enabled'][2] == 1:
@@ -887,8 +912,7 @@ def Manual_Mode(grill_platform, adc_device, display_device, dist_device):
 								   settings['probe_settings']['probe_profiles'][probe1type],
 								   settings['probe_settings']['probe_profiles'][probe2type])
 
-		adc_data = {}
-		adc_data = adc_device.ReadAllPorts()
+		adc_data = ReadProbes(settings, adc_device, units)
 
 		# Test temperature data returned for errors (+/- 20% Temp Variance), and average the data since last reading
 		if settings['globals']['four_probes']:
@@ -929,9 +953,9 @@ def Manual_Mode(grill_platform, adc_device, display_device, dist_device):
 		if now - displaytoggletime > 1:
 			status_data = GetStatus(grill_platform, control, settings, pelletdb)
 			display_device.DisplayStatus(in_data, status_data)
-			displaytoggletime = now 
+			displaytoggletime = now
 
-		control = CheckNotify(in_data, control, settings, pelletdb)
+		control = CheckNotify(in_data, control, settings, pelletdb, grill_platform)
 
 		# Write History after 3 seconds has passed
 		if now - temptoggletime > 3:
@@ -1247,26 +1271,47 @@ def SendIFTTTNotification(notifyevent, control, settings, pelletdb):
 	except:
 		WriteLog("IFTTT Notification Failed: " + url)
 
+
+# ******************************
+# Send influxdb Notifications
+# ******************************
+
+influx_handler = None
+
+def SendInfluxDbNotification(notifyevent, control, settings, pelletdb, in_data, grill_platform):
+	global influx_handler
+	if not influx_handler:
+		from notification_handlers import InfluxNotificationHandler
+		influx_handler = InfluxNotificationHandler(settings)
+	influx_handler.notify(notifyevent, control, settings, pelletdb, in_data, grill_platform)
+
 # ******************************
 # Send Notifications
 # ******************************
 
-def SendNotifications(notifyevent, control, settings, pelletdb):
-	if settings['ifttt']['APIKey'] != '' and settings['ifttt']['enabled']:
-		SendIFTTTNotification(notifyevent, control, settings, pelletdb)
-	if settings['pushbullet']['APIKey'] != '' and settings['pushbullet']['enabled']:
-		SendPushBulletNotification(notifyevent, control, settings, pelletdb)
-	if settings['pushover']['APIKey'] != '' and settings['pushover']['UserKeys'] != '' and settings[
-		'pushover']['enabled']:
-		SendPushoverNotification(notifyevent, control, settings, pelletdb)
-	if settings['firebase']['ServerUrl'] != '' and settings['firebase']['enabled']:
-		SendFirebaseNotification(notifyevent, control, settings, pelletdb)
+def SendNotifications(notifyevent, control, settings, pelletdb, in_data=None, grill_platform=None):
+	if notifyevent != 'GRILL_STATE':
+		if settings['ifttt']['APIKey'] != '' and settings['ifttt']['enabled'] == True:
+			SendIFTTTNotification(notifyevent, control, settings, pelletdb)
+		if settings['pushbullet']['APIKey'] != '' and settings['pushbullet']['enabled'] == True:
+			SendPushBulletNotification(notifyevent, control, settings, pelletdb)
+		if (settings['pushover']['APIKey'] != '' and settings['pushover']['UserKeys'] != '' and settings['pushover'][
+			'enabled'] == True):
+			SendPushoverNotification(notifyevent, control, settings, pelletdb)
+		if settings['firebase']['ServerUrl'] != '' and settings['firebase']['enabled'] == True:
+			SendFirebaseNotification(notifyevent, control, settings, pelletdb)
+	else:
+		if settings['influxdb']['url'] != '' and settings['influxdb']['enabled']:
+			SendInfluxDbNotification(notifyevent, control, settings, pelletdb, in_data, grill_platform)
 
 # ******************************
 # Check for any pending notifications
 # ******************************
 
 def CheckNotify(in_data, control, settings, pelletdb):
+	if settings['influxdb']['url'] != '' and settings['influxdb']['enabled']:
+		SendNotifications('GRILL_STATE', control, settings, pelletdb, in_data, grill_platform)
+
 	if control['notify_req']['grill']:
 		if in_data['GrillTemp'] >= control['setpoints']['grill']:
 			control['notify_req']['grill'] = False
