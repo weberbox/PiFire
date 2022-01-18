@@ -928,15 +928,19 @@ def settingspage(action=None):
 
 		WriteSettings(settings)
 
-	if (request.method == 'POST') and (action == 'shutdown'):
+	if (request.method == 'POST') and (action == 'timers'):
 		response = request.form
 
 		if('shutdown_timer' in response):
 			if(response['shutdown_timer'] != ''):
 				settings['globals']['shutdown_timer'] = int(response['shutdown_timer'])
 
+		if('startup_timer' in response):
+			if(response['startup_timer'] != ''):
+				settings['globals']['startup_timer'] = int(response['startup_timer'])
+
 		event['type'] = 'updated'
-		event['text'] = 'Successfully updated shutdown settings.'
+		event['text'] = 'Successfully updated startup/shutdown settings.'
 
 		WriteSettings(settings)
 
@@ -2103,10 +2107,14 @@ def update_settings(json_data):
 			else:
 				settings['smoke_plus']['enabled'] = False
 
-	if('shutdown' in data):
-		if('shutdown_timer' in data['shutdown']):
-			if(data['shutdown']['shutdown_timer'] != ''):
-				settings['globals']['shutdown_timer'] = int(data['shutdown']['shutdown_timer'])
+	if('timers' in data):
+		if('shutdown_timer' in data['timers']):
+			if(data['timers']['shutdown_timer'] != ''):
+				settings['globals']['shutdown_timer'] = int(data['timers']['shutdown_timer'])
+
+		if('startup_timer' in data['timers']):
+			if(data['timers']['startup_timer'] != ''):
+				settings['globals']['startup_timer'] = int(data['timers']['startup_timer'])
 
 	if('history' in data):
 		if('historymins' in data['history']):
