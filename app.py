@@ -12,7 +12,7 @@
 #
 # *****************************************
 
-from flask import Flask, request, render_template, make_response, send_file, jsonify, redirect
+from flask import Flask, request, abort, render_template, make_response, send_file, jsonify, redirect
 from flask_socketio import SocketIO
 from flask_qrcode import QRcode
 from werkzeug.utils import secure_filename
@@ -47,7 +47,7 @@ def index(action=None):
 @app.route('/dash/<action>', methods=['POST','GET'])
 @app.route('/dash', methods=['POST','GET'])
 def dash(action=None):
-	settings = ReadSettings()
+	global settings
 
 	control = ReadControl()
 
@@ -207,7 +207,7 @@ def dash(action=None):
 def dashdata(action=None):
 
 	control = ReadControl()
-	settings = ReadSettings()
+	global settings
 	probes_enabled = settings['probe_settings']['probes_enabled']
 
 	cur_probe_temps = []
@@ -225,7 +225,7 @@ def hopper_level(action=None):
 @app.route('/history', methods=['POST','GET'])
 def historypage(action=None):
 
-	settings = ReadSettings()
+	global settings
 	control = ReadControl()
 
 	if (request.method == 'POST'):
@@ -313,7 +313,7 @@ def historypage(action=None):
 			last = -1
 			for index in range(0, list_length):
 				if (int((index/list_length)*100) > last):
-					print('Generating Data: ' + str(int((index/list_length)*100)) + "%")
+					#print('Generating Data: ' + str(int((index/list_length)*100)) + "%")
 					last = int((index/list_length)*100)
 				writeline = ','.join(data_list[index])
 				csvfile.write(writeline + '\n')
@@ -336,7 +336,7 @@ def historypage(action=None):
 @app.route('/historyupdate')
 def historyupdate(action=None):
 
-	settings = ReadSettings()
+	global settings
 
 	data_blob = {}
 	num_items = settings['history_page']['minutes'] * 20
@@ -348,7 +348,7 @@ def historyupdate(action=None):
 @app.route('/tuning', methods=['POST','GET'])
 def tuningpage(action=None):
 
-	settings = ReadSettings()
+	global settings
 	control = ReadControl()
 
 	if(control['mode'] == 'Stop'):
@@ -489,7 +489,7 @@ def probe2tr(action=None):
 def eventspage(action=None):
 	# Show list of logged events and debug event list
 	event_list, num_events = ReadLog()
-	settings = ReadSettings()
+	global settings
 
 	return render_template('events.html', event_list=event_list, num_events=num_events, page_theme=settings['globals']['page_theme'], grill_name=settings['globals']['grill_name'])
 
@@ -497,7 +497,7 @@ def eventspage(action=None):
 @app.route('/pellets', methods=['POST','GET'])
 def pelletsspage(action=None):
 	# Pellet Management page
-	settings = ReadSettings()
+	global settings
 	pelletdb = ReadPelletDB()
 	
 	event = {}
@@ -647,7 +647,7 @@ def recipespage(action=None):
 	# Add a recipe
 	# Delete a Recipe
 	# Run a Recipe
-	settings = ReadSettings()
+	global settings
 
 	return render_template('recipes.html', page_theme=settings['globals']['page_theme'], grill_name=settings['globals']['grill_name'])
 
@@ -655,7 +655,7 @@ def recipespage(action=None):
 @app.route('/settings', methods=['POST','GET'])
 def settingspage(action=None):
 
-	settings = ReadSettings()
+	global settings
 	control = ReadControl()
 
 	event = {}
@@ -1069,7 +1069,7 @@ def settingspage(action=None):
 @app.route('/admin', methods=['POST','GET'])
 def adminpage(action=None):
 
-	settings = ReadSettings()
+	global settings
 	pelletdb = ReadPelletDB()
 	notify = ''
 	files = os.listdir(BACKUPPATH)
@@ -1077,9 +1077,9 @@ def adminpage(action=None):
 		if not allowed_file(file):
 			files.remove(file)
 
-	print(f'Files List: {files}')
-	print(f'Request Form: {request.form}')
-	print(f'Request Files: {request.files}')
+	#print(f'Files List: {files}')
+	#print(f'Request Form: {request.form}')
+	#print(f'Request Files: {request.files}')
 
 	if action == 'reboot':
 		event = "Admin: Reboot"
@@ -1140,7 +1140,7 @@ def adminpage(action=None):
 				WriteControl(control)
 
 		if('backupsettings' in response):
-			print('Backing up settings... ')
+			#print('Backing up settings... ')
 			timenow = datetime.datetime.now()
 			timestr = timenow.strftime('%m-%d-%y_%H%M%S') # Truncate the microseconds
 			backupfile = BACKUPPATH + 'PiFire_' + timestr + '.json'
@@ -1148,34 +1148,34 @@ def adminpage(action=None):
 			return send_file(backupfile, as_attachment=True, max_age=0)
 
 		if('restoresettings' in response):
-			print('Restoring settings...')
+			#print('Restoring settings...')
 			# Assume we have request.files and localfile in response
 			remotefile = request.files['uploadfile']
 			localfile = request.form['localfile']
 
 			if (localfile != 'none'):
-				print(f'Selected local file: {BACKUPPATH+localfile}')
+				#print(f'Selected local file: {BACKUPPATH+localfile}')
 				settings = ReadSettings(filename=BACKUPPATH+localfile)
 				notify = "success"
 			elif (remotefile.filename != ''):
-				print(f'Selected remote file: {remotefile.filename}')
+				#print(f'Selected remote file: {remotefile.filename}')
 				# If the user does not select a file, the browser submits an
 				# empty file without a filename.
 				if remotefile and allowed_file(remotefile.filename):
 					filename = secure_filename(remotefile.filename)
 					remotefile.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-					print(f'{filename} saved to {BACKUPPATH}')
+					#print(f'{filename} saved to {BACKUPPATH}')
 					notify = "success"
 					settings = ReadSettings(filename=BACKUPPATH+filename)
 				else:
 					notify = "error"
-					print('Disallowed File Upload.')
+					#print('Disallowed File Upload.')
 			else:
 				notify = "error"
-				print('No file in request.')
+				#print('No file in request.')
 
 		if('backuppelletdb' in response):
-			print('Backing up pelletdb... ')
+			#print('Backing up pelletdb... ')
 			timenow = datetime.datetime.now()
 			timestr = timenow.strftime('%m-%d-%y_%H%M%S') # Truncate the microseconds
 			backupfile = BACKUPPATH + 'PelletDB_' + timestr + '.json'
@@ -1183,31 +1183,31 @@ def adminpage(action=None):
 			return send_file(backupfile, as_attachment=True, max_age=0)
 
 		if('restorepelletdb' in response):
-			print('Restoring pelletdb... ')
+			#print('Restoring pelletdb... ')
 			# Assume we have request.files and localfile in response
 			remotefile = request.files['uploadfile']
 			localfile = request.form['localfile']
 
 			if (localfile != 'none'):
-				print(f'Selected local file: {BACKUPPATH+localfile}')
+				#print(f'Selected local file: {BACKUPPATH+localfile}')
 				pelletdb = ReadPelletDB(filename=BACKUPPATH+localfile)
 				notify = "success"
 			elif (remotefile.filename != ''):
-				print(f'Selected remote file: {remotefile.filename}')
+				#print(f'Selected remote file: {remotefile.filename}')
 				# If the user does not select a file, the browser submits an
 				# empty file without a filename.
 				if remotefile and allowed_file(remotefile.filename):
 					filename = secure_filename(remotefile.filename)
 					remotefile.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-					print(f'{filename} saved to {BACKUPPATH}')
+					#print(f'{filename} saved to {BACKUPPATH}')
 					notify = "success"
 					pelletdb = ReadPelletDB(filename=BACKUPPATH+filename)
 				else:
 					notify = "error"
-					print('Disallowed File Upload.')
+					#print('Disallowed File Upload.')
 			else:
 				notify = "error"
-				print('No file in request.')
+				#print('No file in request.')
 
 	uptime = os.popen('uptime').readline()
 
@@ -1227,7 +1227,7 @@ def adminpage(action=None):
 @app.route('/manual', methods=['POST','GET'])
 def manual_page(action=None):
 
-	settings = ReadSettings()
+	global settings
 	control = ReadControl()
 
 	if (request.method == 'POST'):
@@ -1280,33 +1280,65 @@ def manual_page(action=None):
 @app.route('/api/<action>', methods=['POST','GET'])
 @app.route('/api', methods=['POST','GET'])
 def api_page(action=None):
+	global settings
 
 	if (request.method == 'GET'):
 		if(action == 'settings'):
-			settings=ReadSettings()
 			return jsonify({'settings':settings}), 201
 		elif(action == 'control'):
 			control=ReadControl()
 			return jsonify({'control':control}), 201
 		elif(action == 'current'):
 			current=ReadCurrent()
+			#print(current)
 			current_temps = {
 				'grill_temp' : current[0],
 				'probe1_temp' : current[1],
 				'probe2_temp' : current[2]
 			}
-			return jsonify({'current':current_temps}), 201
+			control=ReadControl()
+			current_setpoints = control['setpoints']
+			pelletdb=ReadPelletDB()
+			status = {}
+			status['mode'] = control['mode']
+			status['status'] = control['status']
+			status['s_plus'] = control['s_plus']
+			status['units'] = settings['globals']['units']
+			status['name'] = settings['globals']['grill_name']
+			status['pelletlevel'] = pelletdb['current']['hopper_level']
+			pelletid = pelletdb['current']['pelletid']
+			status['pellets'] = f'{pelletdb["archive"][pelletid]["brand"]} {pelletdb["archive"][pelletid]["wood"]}'
+			return jsonify({'current':current_temps, 'setpoints':current_setpoints, 'status':status}), 201
 		else:
-			return jsonify({'Error':'Recieved GET request with no action.'}), 404
+			return jsonify({'Error':'Recieved GET request, without valid action'}), 404
 	elif (request.method == 'POST'):
-		if(action == 'settings'):
-			#settings=ReadSettings()
-			return jsonify({'settings':'updated successfully'}), 201
-		elif(action == 'control'):
-			#control=ReadControl()
-			return jsonify({'control':'updated successfully'}), 201
+		if not request.json:
+			event = "Local API Call Failed"
+			WriteLog(event)
+			abort(400)
 		else:
-			return jsonify({'Error':'Recieved POST request with no action.'}), 404
+			requestjson = request.json
+			#print(f'requestjson = {requestjson}')
+			if(action == 'settings'):
+				for key in settings.keys():
+					if key in requestjson.keys():
+						settings[key].update(requestjson.get(key, {}))
+					#print(f'Updated Key: {key}')
+				WriteSettings(settings)
+				return jsonify({'settings':'success'}), 201
+			elif(action == 'control'):
+				control=ReadControl()
+				for key in control.keys():
+					if key in requestjson.keys():
+						if key in ['setpoints', 'safety', 'notify_req', 'notify_data', 'timer', 'manual']:
+							control[key].update(requestjson.get(key, {}))
+						else:
+							control[key] = requestjson[key]
+					#print(f'Updated Key: {key}')
+				WriteControl(control)
+				return jsonify({'control':'success'}), 201
+			else:
+				return jsonify({'Error':'Recieved POST request no valid action.'}), 404
 	else:
 		return jsonify({'Error':'Recieved undefined/unsupported request.'}), 404
 	#return jsonify({'settings':settings,'control':control, 'current':current_temps}), 201
@@ -1417,7 +1449,7 @@ def calc_shh_coefficients(T1, T2, T3, R1, R2, R3):
 		# Step 6: A = Y1 - (B + L1^2*C) * L1
 		A = Y1 - ((B + (math.pow(L1,2) * C)) * L1)
 	except:
-		print('An error occurred when calculating coefficients.')
+		#print('An error occurred when calculating coefficients.')
 		A = 0
 		B = 0
 		C = 0
@@ -1455,7 +1487,7 @@ def tr_to_temp(Tr, a, b, c):
         tempC = tempK - 273.15 # Kelvin to Celsius
         tempF = tempC * (9/5) + 32 # Celsius to Farenheit
     except:
-        print('Error occured while calculating temperature.')
+        #print('Error occured while calculating temperature.')
         tempF = 0.0
     return int(tempF) # Return Calculated Temperature and Thermistor Value in Ohms
 
@@ -1490,7 +1522,7 @@ def disconnect():
 
 @socketio.on('request_grill_data')
 def request_grill_data(force=False):
-	settings = ReadSettings()
+	global settings
 	if(settings['modules']['grillplat'] == 'prototype'):
 		print('Client requesting grill data')
 
@@ -1509,7 +1541,7 @@ def emitGrillData():
 
 	while (clients > 0):
 		control = ReadControl()
-		settings = ReadSettings()
+		global settings
 		pelletdb = ReadPelletDB()
 
 		global forceupdate
@@ -1579,7 +1611,7 @@ def emitGrillData():
 
 @socketio.on('request_pellet_data')
 def request_pellet_data():
-	settings = ReadSettings()
+	global settings
 	if(settings['modules']['grillplat'] == 'prototype'):
 		print('Client requesting pellet data')
 		
@@ -1589,7 +1621,7 @@ def request_pellet_data():
 
 @socketio.on('request_history_data')
 def request_history_data():
-	settings = ReadSettings()
+	global settings
 
 	if(settings['modules']['grillplat'] == 'prototype'):
 		print('Client requesting history data')
@@ -1602,7 +1634,7 @@ def request_history_data():
 
 @socketio.on('request_event_data')
 def request_event_data():
-	settings = ReadSettings()
+	global settings
 
 	if(settings['modules']['grillplat'] == 'prototype'):
 		print('Client requesting event data')
@@ -1617,7 +1649,7 @@ def request_event_data():
 
 @socketio.on('request_settings_data')
 def request_settings_data():
-	settings = ReadSettings()
+	global settings
 
 	if(settings['modules']['grillplat'] == 'prototype'):
 		print('Client requesting settings data')
@@ -1626,7 +1658,7 @@ def request_settings_data():
 
 @socketio.on('request_info_data')
 def request_info_data():
-	settings = ReadSettings()
+	global settings
 
 	if(settings['modules']['grillplat'] == 'prototype'):
 		print('Client requesting info data')
@@ -1653,7 +1685,7 @@ def request_info_data():
 
 @socketio.on('request_manual_data')
 def request_manual_data():
-	settings = ReadSettings()
+	global settings
 	control = ReadControl()
 
 	if(settings['modules']['grillplat'] == 'prototype'):
@@ -1671,7 +1703,7 @@ def request_manual_data():
 
 @socketio.on('request_backup_list')
 def request_backup_list(type='settings'):
-	settings = ReadSettings()
+	global settings
 
 	if (settings['modules']['grillplat'] == 'prototype'):
 		print('Client requesting restore file list')
@@ -1699,7 +1731,7 @@ def request_backup_list(type='settings'):
 
 @socketio.on('request_backup_data')
 def request_backup_data(type='settings'):
-	settings = ReadSettings()
+	global settings
 	pelletdb = ReadPelletDB()
 
 	if (settings['modules']['grillplat'] == 'prototype'):
@@ -1722,7 +1754,7 @@ def request_backup_data(type='settings'):
 
 @socketio.on('update_restore_data')
 def update_restore_data(type='settings', filename='none', json_data=None):
-	settings = ReadSettings()
+	global settings
 
 	if (settings['modules']['grillplat'] == 'prototype'):
 		print('Client requesting data restore')
@@ -1773,7 +1805,7 @@ def update_restore_data(type='settings', filename='none', json_data=None):
 @socketio.on('update_control_data')
 def update_control(json_data):
 	control = ReadControl()
-	settings = ReadSettings()
+	global settings
 
 	if(settings['modules']['grillplat'] == 'prototype'):
 				print('Client requesting control update ' + str(json_data))
@@ -1924,7 +1956,7 @@ def update_control(json_data):
 @socketio.on('update_settings_data')
 def update_settings(json_data):
 	control = ReadControl()
-	settings = ReadSettings()
+	global settings
 
 	if(settings['modules']['grillplat'] == 'prototype'):
 		print('Client requesting settings update ' + str(json_data))
@@ -2199,7 +2231,7 @@ def update_settings(json_data):
 
 @socketio.on('update_pellet_data')
 def update_pellet_data(json_data):
-	settings = ReadSettings()
+	global settings
 	pelletdb = ReadPelletDB()
 
 	if(settings['modules']['grillplat'] == 'prototype'):
@@ -2303,7 +2335,7 @@ def update_pellet_data(json_data):
 
 @socketio.on('update_admin_data')
 def update_admin_data(json_data):
-	settings = ReadSettings()
+	global settings
 	pelletdb = ReadPelletDB()
 
 	if(settings['modules']['grillplat'] == 'prototype'):
@@ -2368,7 +2400,7 @@ def update_admin_data(json_data):
 
 @socketio.on('update_manual_data')
 def update_manual_data(json_data):
-	settings = ReadSettings()
+	global settings
 	control = ReadControl()
 
 	if(settings['modules']['grillplat'] == 'prototype'):
@@ -2418,7 +2450,6 @@ def update_manual_data(json_data):
 				control['manual']['power'] = False
 
 		WriteControl(control)
-
 
 settings = ReadSettings()
 
