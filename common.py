@@ -86,6 +86,13 @@ def DefaultSettings():
 		'ServerUrl' : ''
 	}
 
+	settings['onesignal'] = {
+		'enabled': False,
+		'uuid' : generateUUID(),
+		'app_id' : '',
+		'devices' : {}
+	}
+
 	settings['influxdb'] = {
 		'enabled': False,
 		'url': '',

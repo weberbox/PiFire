@@ -808,6 +808,19 @@ def settingspage(action=None):
 		if 'influxdb_bucket' in response:
 			settings['influxdb']['bucket'] = response['influxdb_bucket']
 
+		if('delete_device' in response):
+			DeviceID = response['delete_device']
+			settings['onesignal']['devices'].pop(DeviceID)
+
+		if('edit_device' in response):
+			if(response['edit_device'] != ''):
+				DeviceID = response['edit_device']
+				settings['onesignal']['devices'][DeviceID] = {
+					'friendly_name' : response['FriendlyName_' + DeviceID],
+					'device_name' : response['DeviceName_' + DeviceID],
+					'app_version' : response['AppVersion_' + DeviceID]
+				}
+
 		event['type'] = 'updated'
 		event['text'] = 'Successfully updated notification settings.'
 
@@ -1869,7 +1882,7 @@ def update_restore_data(type='settings', filename='none', json_data=None):
 		if filename != 'none':
 			#print(f'Selected local file: {BACKUPPATH+filename}')
 			setting = ReadSettings(filename=BACKUPPATH+filename)
-			return "success"
+			return 'success'
 		elif json_data is not None:
 			#print(f'Restoring remote settings json')
 			data = json.loads(json_data)
@@ -1878,17 +1891,17 @@ def update_restore_data(type='settings', filename='none', json_data=None):
 			with open(backupfile, 'w') as settings_file:
 				settings_file.write(json_data_string)
 			setting = ReadSettings(filename=backupfile)
-			return "success"
+			return 'success'
 		else:
 			#print('No filename in request.')
-			return "error"
+			return 'error'
 
 	if type == 'pelletdb':
 		#print('Restoring pelletdb...')
 		if filename != 'none':
 			#print(f'Selected local file: {BACKUPPATH+filename}')
 			pelletdb = ReadPelletDB(filename=BACKUPPATH+filename)
-			return "success"
+			return 'success'
 		elif json_data is not None:
 			#print(f'Restoring remote pelletdb json')
 			data = json.loads(json_data)
@@ -1897,10 +1910,10 @@ def update_restore_data(type='settings', filename='none', json_data=None):
 			with open(backupfile, 'w') as pelletdb_file:
 				pelletdb_file.write(json_data_string)
 			pelletdb = ReadPelletDB(filename=backupfile)
-			return "success"
+			return 'success'
 		else:
 			#print('No filename in request.')
-			return "error"
+			return 'error'
 		
 @socketio.on('update_control_data')
 def update_control(json_data):
@@ -2018,6 +2031,7 @@ def update_control(json_data):
 			control['s_plus'] = data['setmode']['setmodesmokeplus']
 
 	WriteControl(control)
+	return 'success'
 
 @socketio.on('update_settings_data')
 def update_settings(json_data):
@@ -2129,6 +2143,25 @@ def update_settings(json_data):
 
 		if 'influxdb_bucket' in data['notifications']:
 			settings['influxdb']['bucket'] = data['notifications']['influxdb_bucket']
+
+		if 'onesignal_enabled' in data['notifications']:
+			settings['onesignal']['enabled'] = data['notifications']['onesignal_enabled']
+
+		if 'onesignal_app_id' in data['notifications']:
+			settings['onesignal']['app_id'] = data['notifications']['onesignal_app_id']
+
+		if 'onesignal_add_device' in data['notifications']:
+			device = data['notifications']['onesignal_player_id']
+			settings['onesignal']['devices'][device] = {
+				'device_name' : data['notifications']['onesignal_device_name'],
+				'friendly_name' : '',
+				'app_version' : data['notifications']['onesignal_app_version']
+			}
+
+		if 'onesignal_remove_device' in data['notifications']:
+			device = data['notifications']['onesignal_player_id']
+			if device in settings['onesignal']['devices']:
+				settings['onesignal']['devices'].pop(device)
 
 	if 'cycle' in data:
 		if 'pmode' in data['cycle']:
@@ -2252,7 +2285,7 @@ def update_settings(json_data):
 
 	# Take all settings and write them
 	WriteSettings(settings)
-
+	return 'success'
 
 @socketio.on('update_pellet_data')
 def update_pellet_data(json_data):
@@ -2356,7 +2389,7 @@ def update_pellet_data(json_data):
 
 	# Take all pelletdb changes and write them
 	WritePelletDB(pelletdb)
-
+	return 'success'
 
 @socketio.on('update_admin_data')
 def update_admin_data(json_data):
@@ -2423,6 +2456,8 @@ def update_admin_data(json_data):
 				WriteLog(event)
 				os.system("sleep 3 && sudo shutdown -h now &")
 
+		return 'success'
+
 @socketio.on('update_manual_data')
 def update_manual_data(json_data):
 	global settings
@@ -2475,6 +2510,7 @@ def update_manual_data(json_data):
 				control['manual']['power'] = False
 
 		WriteControl(control)
+		return 'success'
 
 settings = ReadSettings()
 

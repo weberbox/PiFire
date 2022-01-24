@@ -146,7 +146,7 @@
 							<div class="modal-body text-center">
 									<h1><output name="grilltempOutput" id="grilltempOutputId">{{ set_points['grill'] }}</output>°{{ units }}</h1>
 									{% if units == 'F' %}
-									<input type="range" class="custom-range" min="125" max="500" value="{{ set_points['grill'] }}" id="tempInputId" name="tempInputRange" oninput="tempOutputId.value = tempInputId.value">
+								    <input type="range" class="custom-range" min="125" max="500" value="{{ set_points['grill'] }}" id="grilltempInputId" name="grilltempInputRange" oninput="grilltempOutputId.value = grilltempInputId.value">
 									{% else %}
 									<input type="range" class="custom-range" min="50" max="260" value="{{ set_points['grill'] }}" id="grilltempInputId" name="grilltempInputRange" oninput="grilltempOutputId.value = grilltempInputId.value">
 									{% endif %}
