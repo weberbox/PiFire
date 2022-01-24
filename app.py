@@ -213,7 +213,10 @@ def timer(action=None):
 					else:
 						control['timer']['end'] = now + 60
 					if('shutdownTimer' in request.form):
-						control['notify_data']['timer_shutdown'] = True
+						if(request.form['shutdownTimer'] == 'true'):
+							control['notify_data']['timer_shutdown'] = True
+						else:
+							control['notify_data']['timer_shutdown'] = False
 					WriteLog('Timer started.  Ends at: ' + epoch_to_time(control['timer']['end']))
 					WriteControl(control)
 				else:	# If Timer was paused, restart with new end time.
