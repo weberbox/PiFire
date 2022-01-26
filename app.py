@@ -1790,11 +1790,11 @@ def request_updater_data():
 		commits_behind = avail_updates_struct['commits_behind']
 		event = None
 	else:
-		commits_behind = None
+		commits_behind = 0
 		event = avail_updates_struct['message']
 		WriteLog(event)
 
-	if (commits_behind is not None):
+	if (commits_behind > 0):
 		logs_result = get_log(commits_behind)
 	else:
 		logs_result = None
@@ -1825,8 +1825,8 @@ def request_updater_action(json_data):
 			result = set_branch(data['change_branch']['branch_target'])
 			output_log = f'** Changing to {data["change_branch"]["branch_target"]} branch ** \n\n'
 			if('ERROR' not in result):
-				restart_scripts()
 				output_log += result
+				restart_scripts()
 				return output_log
 			else:
 				return result
