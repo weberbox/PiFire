@@ -1777,6 +1777,68 @@ def request_manual_data():
 
 	return manual_list
 
+@socketio.on('request_updater_data')
+def request_updater_data():
+	global settings
+
+	if settings['modules']['grillplat'] == 'prototype':
+		print('Client requesting update data')
+
+	avail_updates_struct = get_available_updates()
+
+	if(avail_updates_struct['success']):
+		commits_behind = avail_updates_struct['commits_behind']
+		event = None
+	else:
+		commits_behind = None
+		event = avail_updates_struct['message']
+		WriteLog(event)
+
+	if (commits_behind is not None):
+		logs_result = get_log(commits_behind)
+	else:
+		logs_result = None
+
+	# Populate Update Data Structure
+	update_data = {}
+	update_data['check_success'] = avail_updates_struct['success']
+	update_data['branches'] = get_available_branches()
+	update_data['branch_target'] = get_branch()
+	update_data['remote_url'] = get_remote_url()
+	update_data['remote_version'] = get_remote_version()
+	update_data['commits_behind'] = commits_behind
+	update_data['logs_result'] = logs_result
+	update_data['error_message'] = event
+
+	return update_data
+
+@socketio.on('request_updater_action')
+def request_updater_action(json_data):
+
+	if settings['modules']['grillplat'] == 'prototype':
+		print('Client requesting updater action')
+
+	data = json.loads(json_data)
+
+	if('change_branch' in data):
+		if('branch_target' in data['change_branch']):
+			result = set_branch(data['change_branch']['branch_target'])
+			output_log = f'** Changing to {data["change_branch"]["branch_target"]} branch ** \n\n'
+			if('ERROR' not in result):
+				restart_scripts()
+				output_log += result
+				return output_log
+			else:
+				return result
+
+	if('do_update' in data):
+		if('branch_target' in data['do_update']):
+			result = do_update()
+			output_log = f'** Attempting update on {data["do_update"]["branch_target"]} ** \n\n'
+			output_log += result
+			restart_scripts()
+			return output_log
+
 @socketio.on('request_backup_list')
 def request_backup_list(type='settings'):
 	global settings
