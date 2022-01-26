@@ -1814,6 +1814,7 @@ def request_updater_data():
 
 @socketio.on('request_updater_action')
 def request_updater_action(json_data):
+	global settings
 
 	if settings['modules']['grillplat'] == 'prototype':
 		print('Client requesting updater action')
