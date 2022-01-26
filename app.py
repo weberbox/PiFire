@@ -1824,21 +1824,21 @@ def request_updater_action(json_data):
 	if('change_branch' in data):
 		if('branch_target' in data['change_branch']):
 			result = set_branch(data['change_branch']['branch_target'])
-			output_log = f'** Changing to {data["change_branch"]["branch_target"]} branch ** \n\n'
+			comment = f'** Changing to {data["change_branch"]["branch_target"]} branch ** \n\n'
 			if('ERROR' not in result):
-				output_log += result
+				result.insert(0, comment)
 				restart_scripts()
-				return output_log
+				return result
 			else:
 				return result
 
 	if('do_update' in data):
 		if('branch_target' in data['do_update']):
 			result = do_update()
-			output_log = f'** Attempting update on {data["do_update"]["branch_target"]} ** \n\n'
-			output_log += result
+			comment = f'** Attempting update on {data["do_update"]["branch_target"]} ** \n\n'
+			result.insert(0, comment)
 			restart_scripts()
-			return output_log
+			return result
 
 @socketio.on('request_backup_list')
 def request_backup_list(type='settings'):
