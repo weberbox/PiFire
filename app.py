@@ -1802,6 +1802,7 @@ def request_updater_data():
 	# Populate Update Data Structure
 	update_data = {}
 	update_data['check_success'] = avail_updates_struct['success']
+	update_data['version'] = settings['versions']['server']
 	update_data['branches'] = get_available_branches()
 	update_data['branch_target'] = get_branch()
 	update_data['remote_url'] = get_remote_url()
@@ -1824,7 +1825,7 @@ def request_updater_action(json_data):
 	if('change_branch' in data):
 		if('branch_target' in data['change_branch']):
 			result = set_branch(data['change_branch']['branch_target'])
-			comment = f'** Changing to {data["change_branch"]["branch_target"]} branch ** \n\n'
+			comment = f'Changing to {data["change_branch"]["branch_target"]} branch \n\n'
 			if('ERROR' not in result):
 				result.insert(0, comment)
 				restart_scripts()
@@ -1835,7 +1836,7 @@ def request_updater_action(json_data):
 	if('do_update' in data):
 		if('branch_target' in data['do_update']):
 			result = do_update()
-			comment = f'** Attempting update on {data["do_update"]["branch_target"]} ** \n\n'
+			comment = f'Attempting update on {data["do_update"]["branch_target"]} \n\n'
 			result.insert(0, comment)
 			restart_scripts()
 			return result
