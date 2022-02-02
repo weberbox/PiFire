@@ -1512,10 +1512,6 @@ def disconnect():
 
 @socketio.on('get_dash_data')
 def get_dash_data(force=False):
-	global settings
-	if settings['modules']['grillplat'] == 'prototype':
-		print('Client requesting grill data')
-
 	global thread
 	global force_refresh
 	force_refresh = force
@@ -1664,11 +1660,10 @@ def get_app_data(action=None, type=None):
 
 		if avail_updates_struct['success']:
 			commits_behind = avail_updates_struct['commits_behind']
-			event = None
 		else:
-			commits_behind = 0
-			event = avail_updates_struct['message']
-			WriteLog(event)
+			message = avail_updates_struct['message']
+			WriteLog(message)
+			return {'response': {'result':'error', 'message':' Error: ' + f'{message}' + ''}}
 
 		if commits_behind > 0:
 			logs_result = get_log(commits_behind)
@@ -1689,7 +1684,7 @@ def get_app_data(action=None, type=None):
 				 'remote_version' : update_data['remote_version'],
 				 'commits_behind' : commits_behind,
 				 'logs_result' : logs_result,
-				 'error_message' : event }
+				 'error_message' : error_msg }
 	else:
 		return {'response': {'result':'error', 'message':' Error: Recieved request without valid action'}}
 
@@ -1950,11 +1945,11 @@ def updater_action(type='none', branch=None):
 	if type == 'change_branch':
 		if branch is not None:
 			result, error_msg = set_branch(branch)
-			comment = f'Changing to {branch} branch \n\n'
+			message = f'Changing to {branch} branch \n\n'
 			if error_msg == '':
-				result.insert(0, comment)
+				message += result
 				restart_scripts()
-				return {'response': {'result':'success', 'message': {result} }}
+				return {'response': {'result':'success', 'message': {message} }}
 			else:
 				return {'response': {'result':'error', 'message':'Error: ' + f'{error_msg}' + ''}}
 		else:
@@ -1963,11 +1958,11 @@ def updater_action(type='none', branch=None):
 	elif type == 'do_update':
 		if branch is not None:
 			result, error_msg = do_update()
-			comment = f'Attempting update on {branch} \n\n'
+			message = f'Attempting update on {branch} \n\n'
 			if error_msg == '':
-				result.insert(0, comment)
+				message += result
 				restart_scripts()
-				return {'response': {'result':'success', 'message': {result} }}
+				return {'response': {'result':'success', 'message': {message} }}
 			else:
 				return {'response': {'result':'error', 'message':'Error: ' + f'{error_msg}' + ''}}
 		else:
