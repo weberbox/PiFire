@@ -1663,7 +1663,7 @@ def get_app_data(action=None, type=None):
 		else:
 			message = avail_updates_struct['message']
 			WriteLog(message)
-			return {'response': {'result':'error', 'message':' Error: ' + f'{message}' + ''}}
+			return {'response': {'result':'error', 'message':'Error: ' + message }}
 
 		if commits_behind > 0:
 			logs_result = get_log(commits_behind)
@@ -1686,7 +1686,7 @@ def get_app_data(action=None, type=None):
 				 'logs_result' : logs_result,
 				 'error_message' : error_msg }
 	else:
-		return {'response': {'result':'error', 'message':' Error: Recieved request without valid action'}}
+		return {'response': {'result':'error', 'message':'Error: Recieved request without valid action'}}
 
 @socketio.on('post_app_data')
 def post_app_data(action=None, type=None, json_data=None):
@@ -1949,9 +1949,9 @@ def updater_action(type='none', branch=None):
 			if error_msg == '':
 				message += result
 				restart_scripts()
-				return {'response': {'result':'success', 'message': {message} }}
+				return {'response': {'result':'success', 'message': message }}
 			else:
-				return {'response': {'result':'error', 'message':'Error: ' + f'{error_msg}' + ''}}
+				return {'response': {'result':'error', 'message':'Error: ' + error_msg }}
 		else:
 			return {'response': {'result':'error', 'message':'Error: Branch not specified in request'}}
 
@@ -1962,9 +1962,9 @@ def updater_action(type='none', branch=None):
 			if error_msg == '':
 				message += result
 				restart_scripts()
-				return {'response': {'result':'success', 'message': {message} }}
+				return {'response': {'result':'success', 'message': message }}
 			else:
-				return {'response': {'result':'error', 'message':'Error: ' + f'{error_msg}' + ''}}
+				return {'response': {'result':'error', 'message':'Error: ' + error_msg }}
 		else:
 			return {'response': {'result':'error', 'message':'Error: Branch not specified in request'}}
 	else:
