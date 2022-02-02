@@ -1945,7 +1945,7 @@ def updater_action(type='none', branch=None):
 	if type == 'change_branch':
 		if branch is not None:
 			result, error_msg = set_branch(branch)
-			message = f'Changing to {branch} branch \n\n'
+			message = f'Changing to {branch} branch \n'
 			if error_msg == '':
 				message += result
 				restart_scripts()
@@ -1958,7 +1958,7 @@ def updater_action(type='none', branch=None):
 	elif type == 'do_update':
 		if branch is not None:
 			result, error_msg = do_update()
-			message = f'Attempting update on {branch} \n\n'
+			message = f'Attempting update on {branch} \n'
 			if error_msg == '':
 				message += result
 				restart_scripts()
