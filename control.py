@@ -1338,14 +1338,18 @@ def SendOneSignalNotification(notifyevent, control, settings, pelletdb):
 		else:
 			WriteLog("OneSignal Notification Failed: " + titlemessage)
 
-		if settings['modules']['grillplat'] == 'prototype':
-			print(response.status_code)
-			print(response.json())
+		json_response = response.json()
+		if 'errors' in json_response:
+			if 'invalid_player_ids' in json_response['errors']:
+				for device in json_response['errors']['invalid_player_ids']:
+					if device in settings['onesignal']['devices']:
+						WriteLog("OneSignal: " + settings['onesignal']['devices'][device]['device_name'] +
+								 " has an invalid id and has been removed")
+						settings['onesignal']['devices'].pop(device)
+						WriteSettings(settings)
+
 	else:
 		WriteLog("OneSignal Notification Failed No Devices Registered")
-
-		if settings['modules']['grillplat'] == 'prototype':
-			print("No devices in OneSignal list")
 
 # ******************************
 # Send IFTTT Notifications
