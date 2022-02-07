@@ -80,12 +80,6 @@ def DefaultSettings():
 		'PublicURL': '' # Used in Pushover notifications
 	}
 
-	settings['firebase'] = {
-		'enabled': False,
-		'uuid' : generateUUID(),
-		'ServerUrl' : ''
-	}
-
 	settings['onesignal'] = {
 		'enabled': False,
 		'uuid' : generateUUID(),

@@ -610,12 +610,6 @@ def settingspage(action=None):
 		else:
 			settings['pushover']['enabled'] = False
 
-		if('firebase_enabled' in response):
-			if(response['firebase_enabled'] == 'on'):
-				settings['firebase']['enabled'] = True
-		else:
-			settings['firebase']['enabled'] = False
-
 		if('iftttapi' in response):
 			if(response['iftttapi'] == "0") or (response['iftttapi'] == ''):
 				settings['ifttt']['APIKey'] = ''

@@ -821,28 +821,6 @@
                     <br>
                     <div class="card shadow-sm">
                         <div class="card-header bg-light text-dark">
-                            <h5>Firebase</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="custom-control custom-switch">
-                                <input type="checkbox" class="custom-control-input" id="firebase_enabled" name="firebase_enabled" {% if settings['firebase']['enabled'] == True %}checked{% endif %} {% if settings['firebase']['ServerUrl'] == '' %} disabled {% endif %}>
-                                <label class="custom-control-label" for="firebase_enabled">Firebase Enabled</label>
-                            </div>
-                            <br>
-                            {% if settings['firebase']['ServerUrl'] == '' %}
-                            <span class="badge badge-warning">NOTE:</span>
-                            <i class="small"> You must enable this option for the first time from the Android client. </i>
-                            {% else %}
-                            <span class="badge badge-warning">NOTE:</span>
-                            <i class="small"> When this option is enabled Firebase notifications will be enabled for all clients that connect to this server.</i>
-                            {% endif %}
-                        </div>
-                        <!-- End of card body -->
-                    </div>
-                    <!-- End of Card -->
-                    <br>
-                    <div class="card shadow-sm">
-                        <div class="card-header bg-light text-dark">
                             <h5>Android Push Notifications</h5>
                         </div>
                         <div class="card-body">
@@ -930,6 +908,9 @@
                                 </div>
                             </div>
                             <br> {% endfor %}
+                            <span class="badge badge-warning">NOTE:</span>
+                            <i class="small"> You can download the Android application from <a href="https://github.com/weberbox/PiFire-Android" target="blank">Github</a> </i>
+                            <br>
                         </div>
                         <!-- End of card body -->
                     </div>
