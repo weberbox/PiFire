@@ -256,14 +256,14 @@ function updateDashButtons(data) {
 			$("#error_btn").show();
 			document.getElementById("error_btn").className = "btn btn-danger border border-warning text-warning";
 		} else if (data.current_mode == 'Manual') {
-          	$("#active_group").hide();
-          	$("#inactive_group").hide();
-          	$("#splus_btn").hide();
-          	$("#smoke_inactive_btn").hide();
-          	$("#hold_inactive_btn").hide();
-          	$("#monitor_btn").hide();
-          	$("#error_btn").hide();
-        };
+			$("#active_group").hide();
+			$("#inactive_group").hide();
+			$("#splus_btn").hide();
+			$("#smoke_inactive_btn").hide();
+			$("#hold_inactive_btn").hide();
+			$("#monitor_btn").hide();
+			$("#error_btn").hide();
+		};
 
         if ((data.current_mode == 'Smoke') || (data.current_mode == 'Hold')) {
             if(data.splus == true) {
@@ -561,8 +561,8 @@ $(document).ready(function(){
 			shutdown = true;
 		};
 		if ($('#keepWarmP1').is(":checked")){
-        	keepWarm = true;
-        };
+			keepWarm = true;
+		};
 		var postdata = { 
 			'setpoints' : {
 				'probe1' : setPoint 
@@ -617,8 +617,8 @@ $(document).ready(function(){
 			shutdown = true;
 		};
 		if ($('#keepWarmP2').is(":checked")){
-        	keepWarm = true;
-        };
+			keepWarm = true;
+		};
 		var postdata = { 
 			'setpoints' : {
 				'probe2' : setPoint 

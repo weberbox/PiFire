@@ -174,8 +174,8 @@ $("#timer_launch").click(function(){
 		timerShutdown = true;
 	}
 	if ($('#keepWarmTimer').is(":checked")) {
-    	timerKeepWarm = true;
-    }
+		timerKeepWarm = true;
+	}
 	// For Debug
 	//console.log("Hours: " + timerHours);
 	//console.log("Mins: " + timerMins);
