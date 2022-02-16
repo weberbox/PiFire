@@ -169,10 +169,13 @@ $("#timer_launch").click(function(){
 	var timerHours = $("#hoursInputId").val();
 	var timerMins = $("#minsInputId").val();
 	var timerShutdown = false;
-	if ($('#shutdownTimer').is(":checked"))
-		{
+	var timerKeepWarm = false;
+	if ($('#shutdownTimer').is(":checked")) {
 		timerShutdown = true;
-		}
+	}
+	if ($('#keepWarmTimer').is(":checked")) {
+    	timerKeepWarm = true;
+    }
 	// For Debug
 	//console.log("Hours: " + timerHours);
 	//console.log("Mins: " + timerMins);
@@ -184,6 +187,7 @@ $("#timer_launch").click(function(){
 				'hoursInputRange' : timerHours,
 				'minsInputRange' : timerMins,
 				'shutdownTimer' : timerShutdown,
+				'keepWarmTimer' : timerKeepWarm
 		}
 	});
 	req.done(function(data) {

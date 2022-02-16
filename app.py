@@ -86,6 +86,11 @@ def timer():
 							control['notify_data']['timer_shutdown'] = True
 						else:
 							control['notify_data']['timer_shutdown'] = False
+					if('keepWarmTimer' in request.form):
+						if(request.form['keepWarmTimer'] == 'true'):
+							control['notify_data']['timer_keep_warm'] = True
+						else:
+							control['notify_data']['timer_keep_warm'] = False
 					WriteLog('Timer started.  Ends at: ' + epoch_to_time(control['timer']['end']))
 					WriteControl(control)
 				else:	# If Timer was paused, restart with new end time.
@@ -107,6 +112,7 @@ def timer():
 					control['timer']['end'] = 0
 					control['timer']['paused'] = 0
 					control['notify_data']['timer_shutdown'] = False
+					control['notify_data']['timer_keep_warm'] = False
 					WriteLog('Timer cleared.')
 					WriteControl(control)
 			elif 'timer_stop' == request.form['input']:
@@ -115,6 +121,7 @@ def timer():
 				control['timer']['end'] = 0
 				control['timer']['paused'] = 0
 				control['notify_data']['timer_shutdown'] = False
+				control['notify_data']['timer_keep_warm'] = False
 				WriteLog('Timer stopped.')
 				WriteControl(control)
 		return jsonify({'result':'success'})
@@ -790,6 +797,14 @@ def settingspage(action=None):
 				settings['smoke_plus']['enabled'] = True 
 		else:
 			settings['smoke_plus']['enabled'] = False
+		if('keep_warm_temp' in response):
+			if(response['keep_warm_temp'] != ''):
+				settings['keep_warm']['temp'] = int(response['keep_warm_temp'])
+		if('keep_warm_s_plus' in response):
+			if(response['keep_warm_s_plus'] == 'on'):
+				settings['keep_warm']['s_plus'] = True
+		else:
+			settings['keep_warm']['s_plus'] = False
 				
 		event['type'] = 'updated'
 		event['text'] = 'Successfully updated cycle settings.'
@@ -1909,6 +1924,7 @@ def post_app_data(action=None, type=None, json_data=None):
 					seconds = seconds + request['timer_action']['minutes_range'] * 60
 					control['timer']['end'] = now + seconds
 					control['notify_data']['timer_shutdown'] = request['timer_action']['timer_shutdown']
+					control['notify_data']['timer_keep_warm'] = request['timer_action']['timer_keep_warm']
 					WriteLog('Timer started.  Ends at: ' + epoch_to_time(control['timer']['end']))
 					WriteControl(control)
 					return {'response': {'result':'success'}}
@@ -1934,6 +1950,7 @@ def post_app_data(action=None, type=None, json_data=None):
 			control['timer']['end'] = 0
 			control['timer']['paused'] = 0
 			control['notify_data']['timer_shutdown'] = False
+			control['notify_data']['timer_keep_warm'] = False
 			WriteLog('Timer stopped.')
 			WriteControl(control)
 			return {'response': {'result':'success'}}
