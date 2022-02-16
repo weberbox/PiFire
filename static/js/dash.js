@@ -666,56 +666,55 @@ $(document).ready(function(){
 	});
 
 	// ******************
-    // Checkbox Listeners
-    // ******************
+	// Checkbox Listeners
+	// ******************
 
-    $("#shutdownP1").click(function(){
-        if($(this).is(':checked')){
-            document.getElementById("keepWarmP1").disabled = true;
-        } else {
-            document.getElementById("keepWarmP1").disabled = false;
-        }
-    });
+	$("#shutdownP1").click(function(){
+		if($(this).is(':checked')){
+			document.getElementById("keepWarmP1").disabled = true;
+		} else {
+			document.getElementById("keepWarmP1").disabled = false;
+		}
+	});
 
 	$("#keepWarmP1").click(function(){
-	    if($(this).is(':checked')){
-            document.getElementById("shutdownP1").disabled = true;
-        } else {
-            document.getElementById("shutdownP1").disabled = false;
-        }
-    });
+		if($(this).is(':checked')){
+			document.getElementById("shutdownP1").disabled = true;
+		} else {
+			document.getElementById("shutdownP1").disabled = false;
+		}
+	});
 
-    $("#shutdownP2").click(function(){
-        if($(this).is(':checked')){
-            document.getElementById("keepWarmP2").disabled = true;
-        } else {
-            document.getElementById("keepWarmP2").disabled = false;
-        }
-    });
+	$("#shutdownP2").click(function(){
+		if($(this).is(':checked')){
+			document.getElementById("keepWarmP2").disabled = true;
+		} else {
+			document.getElementById("keepWarmP2").disabled = false;
+		}
+	});
 
-    $("#keepWarmP2").click(function(){
-        if($(this).is(':checked')){
-            document.getElementById("shutdownP2").disabled = true;
-        } else {
-            document.getElementById("shutdownP2").disabled = false;
-        }
-    });
+	$("#keepWarmP2").click(function(){
+		if($(this).is(':checked')){
+			document.getElementById("shutdownP2").disabled = true;
+		} else {
+			document.getElementById("shutdownP2").disabled = false;
+		}
+	});
 
-    $("#shutdownTimer").click(function(){
-        if($(this).is(':checked')){
-            document.getElementById("keepWarmTimer").disabled = true;
-        } else {
-            document.getElementById("keepWarmTimer").disabled = false;
-        }
-    });
+	$("#shutdownTimer").click(function(){
+		if($(this).is(':checked')){
+			document.getElementById("keepWarmTimer").disabled = true;
+		} else {
+			document.getElementById("keepWarmTimer").disabled = false;
+		}
+	});
 
-    $("#keepWarmTimer").click(function(){
-        if($(this).is(':checked')){
-            document.getElementById("shutdownTimer").disabled = true;
-        } else {
-            document.getElementById("shutdownTimer").disabled = false;
-        }
-    });
-
+	$("#keepWarmTimer").click(function(){
+		if($(this).is(':checked')){
+			document.getElementById("shutdownTimer").disabled = true;
+		} else {
+			document.getElementById("shutdownTimer").disabled = false;
+		}
+	});
 
 }); // End of Document Ready Function

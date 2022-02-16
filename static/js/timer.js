@@ -170,10 +170,10 @@ $("#timer_launch").click(function(){
 	var timerMins = $("#minsInputId").val();
 	var timerShutdown = false;
 	var timerKeepWarm = false;
-	if ($('#shutdownTimer').is(":checked")) {
+	if ($('#shutdownTimer').is(":checked")){
 		timerShutdown = true;
 	}
-	if ($('#keepWarmTimer').is(":checked")) {
+	if ($('#keepWarmTimer').is(":checked")){
 		timerKeepWarm = true;
 	}
 	// For Debug
