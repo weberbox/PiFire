@@ -64,17 +64,16 @@ echo "**                                                                     **"
 echo "*************************************************************************"
 $SUDO apt upgrade -y
 
-# Install dependancies
+# Install dependencies
 clear
 echo "*************************************************************************"
 echo "**                                                                     **"
-echo "**      Installing Dependancies... (This could take several minutes)   **"
+echo "**      Installing Dependencies... (This could take several minutes)   **"
 echo "**                                                                     **"
 echo "*************************************************************************"
 $SUDO apt install python3-dev python3-pip python3-rpi.gpio python3-pil libfreetype6-dev libjpeg-dev build-essential libopenjp2-7 libtiff5 nginx git gunicorn3 supervisor ttf-mscorefonts-installer redis-server -y
 $SUDO pip3 install flask
 $SUDO pip3 install pushbullet.py
-$SUDO pip3 install qrcode[pil]
 $SUDO pip3 install flask-qrcode
 $SUDO pip3 install flask-socketio
 $SUDO pip3 install eventlet==0.30.2
@@ -82,6 +81,19 @@ $SUDO pip3 install gpiozero
 $SUDO pip3 install redis
 $SUDO pip3 install uuid
 $SUDO pip3 install influxdb-client[ciso]
+
+# Setup config.txt to enable busses
+clear
+echo "*************************************************************************"
+echo "**                                                                     **"
+echo "**      Configuring config.txt                                         **"
+echo "**                                                                     **"
+echo "*************************************************************************"
+
+# Enable SPI - Needed for some displays
+echo "dtparam=spi=on" | $SUDO tee -a /boot/config.txt > /dev/null
+# Enable I2C - Needed for some displays, ADCs, distance sensors
+echo "dtparam=i2c_arm=on" | $SUDO tee -a /boot/config.txt > /dev/null
 
 # Grab project files
 clear
@@ -155,18 +167,7 @@ fi
 # If supervisor isn't already running, startup Supervisor
 $SUDO service supervisor start
 
-clear
-echo "*************************************************************************"
-echo "**                                                                     **"
-echo "**      Configuring Modules...                                         **"
-echo "**                                                                     **"
-echo "*************************************************************************"
-
-cd ~/pifire # Change dir to where the settings.py application is (and common.py)
-
-$SUDO bash modules.sh
-
 # Rebooting
-whiptail --msgbox --backtitle "Install Complete / Reboot Required" --title "Installation Completed - Rebooting" "Congratulations, the installation is complete.  At this time, we will perform a reboot and your application should be ready.  You should be able to access your application by opening a browser on your PC or other device and using the IP address for this Pi.  Enjoy!" ${r} ${c}
+whiptail --msgbox --backtitle "Install Complete / Reboot Required" --title "Installation Completed - Rebooting" "Congratulations, the installation is complete.  At this time, we will perform a reboot and your application should be ready.  On first boot, the wizard will guide you through the remaining setup steps.  You should be able to access your application by opening a browser on your PC or other device and using the IP address for this Pi.  Enjoy!" ${r} ${c}
 clear
 $SUDO reboot
