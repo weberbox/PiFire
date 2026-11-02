@@ -1,0 +1,91 @@
+# Builds ghcr.io/weberbox/pifire:dev from dev-deploy, the branch rebuilt by homelab-stacks/dev/pifire-dev/deploy.sh.
+# The image is only pushed if docker/smoke-test.sh passes. This file lives on the docker branch and never goes upstream.
+name: Docker image (dev)
+
+on:
+  push:
+    branches: [dev-deploy]
+
+concurrency:
+  group: docker-dev
+  cancel-in-progress: true
+
+env:
+  IMAGE: ghcr.io/weberbox/pifire
+  # How many of the newest package versions the cleanup keeps, whatever their tags.
+  KEEP_VERSIONS: 10
+
+jobs:
+  image:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: docker/setup-buildx-action@v4
+
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: docker/Dockerfile
+          platforms: linux/amd64
+          load: true
+          tags: pifire:smoke
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          provenance: false
+          sbom: false
+
+      - name: Smoke test
+        run: bash docker/smoke-test.sh pifire:smoke
+
+      - id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ env.IMAGE }}
+          flavor: latest=false
+          tags: |
+            type=raw,value=dev
+            type=sha,prefix=sha-,format=short
+
+      - name: Push
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: docker/Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          # One package version per build. With these on, each build adds untagged versions that its tagged version
+          # needs, and the cleanup would delete them and break the image.
+          provenance: false
+          sbom: false
+
+      # Sorted newest first; anything past KEEP_VERSIONS goes unless it has the dev tag.
+      - name: Delete old package versions
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSIONS_API: users/${{ github.repository_owner }}/packages/container/pifire/versions
+        run: |
+          gh api --paginate "$VERSIONS_API?per_page=100" \
+            | jq -s -r --argjson keep "$KEEP_VERSIONS" '
+                add
+                | sort_by(.created_at) | reverse | .[$keep:][]
+                | select(any(.metadata.container.tags[]; . == "dev") | not)
+                | .id' \
+            | while read -r id; do
+                echo "Deleting package version $id"
+                gh api --method DELETE "$VERSIONS_API/$id"
+              done

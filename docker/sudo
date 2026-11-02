@@ -1,0 +1,23 @@
+#!/bin/sh
+# Not real sudo. PiFire runs "sudo" for restarts and power actions, written for a Pi with systemd.
+# Here those become supervisor restarts, and a reboot or shutdown ends PID 1 so Docker's restart policy
+# brings the container back. Anything else runs unchanged as this unprivileged user.
+restart_apps() {
+  setsid supervisorctl restart control webapp >/dev/null 2>&1 &
+}
+
+stop_container() {
+  kill -TERM 1
+}
+
+case "$1 $2 $3" in
+  "systemctl restart supervisor" | "service supervisor restart")
+    restart_apps
+    ;;
+  "systemctl reboot "* | "systemctl poweroff "* | "reboot "* | "shutdown "* | "poweroff "*)
+    stop_container
+    ;;
+  *)
+    exec "$@"
+    ;;
+esac

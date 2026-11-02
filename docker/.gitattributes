@@ -1,0 +1,2 @@
+# These run inside a Linux container, so they stay LF in a Windows checkout too.
+* text eol=lf
